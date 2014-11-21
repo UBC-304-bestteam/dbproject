@@ -1,0 +1,107 @@
+
+body.n {
+	font-family: verdana,helvetica;
+	color: #000000;
+	background-color: #ffffff; 
+	margin-left:-8px; 
+	margin-top:-8px;
+	font-size: 10px;
+}
+
+body.white {
+	font-family: verdana,helvetica;
+	color: #000000;
+	background-color: #ffffff;
+	font-size: 12px;
+}
+body {
+	font-family: verdana,helvetica;
+	color: #000000;
+	background-color: #ffffff;
+	font-size: 12px;
+}
+h1 {
+	font-family: verdana,helvetica;
+	font-size: 24px;
+	font-weight: bold;
+	color: #0B0B61;
+	text-align: center;
+}
+h2 {
+	font-family: verdana,helvetica;
+	font-size: 14px;
+	font-weight: bold;
+	color: #848484;
+}
+h3 {
+	font-family: verdana,helvetica;
+	font-size: 12px;
+	font-weight: bold;
+	color: #000000;
+}
+td {
+	font-family: verdana,helvetica;
+	color: #000000;
+	font-size: 12px;
+	vertical-align: top;
+}
+a {
+	font-family: verdana,helvetica;
+	font-size: 12px;
+}
+a:link { color: #bb3902; font-weight:normal; text-decoration:underline;}
+a:visited { color: #bb3902; font-weight:normal; text-decoration:underline;}
+a:active { color: #bb3902; font-weight:normal; text-decoration:underline;}
+a:hover { color: #bb3902; font-weight:normal; text-decoration:underline;}
+
+.rowheader {
+	font-family: verdana,helvetica;
+	color: #000000;
+	background-color: #ffffff;
+	font-weight: plain;
+	font-size: 14pt;
+    width: 160px;
+}
+
+.errorarea {
+	font-family: verdana,helvetica;
+	font-size: 10px;
+	font-weight: bold;
+	color: #ff5050;
+}
+
+p {
+	font-family: verdana,helvetica;
+	font-size: 12px;
+}
+
+.homelogo {
+
+	margin-top: 100;
+	width: 25%;
+	height: 25%;
+	
+}
+
+.userlogo {
+	width: 10%;
+	height: 10%;
+}
+
+.homepagelink {
+	text-align:left;
+}
+
+.usercontrol {
+
+}
+
+.headertablecontainer {
+	width:100%
+}
+
+.headertable {
+	border: 1px solid black;
+	width:100%;
+
+}

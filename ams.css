@@ -44,6 +44,7 @@ td {
 	color: #000000;
 	font-size: 12px;
 	vertical-align: top;
+	white-space:nowrap;
 }
 a {
 	font-family: verdana,helvetica;
@@ -57,7 +58,7 @@ a:hover { color: #bb3902; font-weight:normal; text-decoration:underline;}
 .rowheader {
 	font-family: verdana,helvetica;
 	color: #000000;
-	background-color: #ffffff;
+	background-color: #CE7149;
 	font-weight: plain;
 	font-size: 14pt;
     width: 160px;

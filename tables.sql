@@ -7,11 +7,13 @@ create table item
 	title varchar(40) not null,
 	item_type varchar(20) not null,
 	category varchar(40) not null,
-	company varchar(40) null,
-	release_year int null,
+	company varchar(40),
+	release_year int,
 	price float not null,
 	stock int not null,
 	PRIMARY KEY (upc));
+	CONSTRAINT chk_type CHECK (item_type IN ('CD', 'DVD'));
+	CONSTRAINT chk_category CHECK (category IN ('Rock', 'Country', 'Pop', 'Rap', 'Classical', 'Instrumental', 'New Age'));
 
 create table leadsinger
 	(upc int not null,
@@ -27,20 +29,20 @@ create table hassong
  
 create table customer
 	(cid char(10) not null,
-	pword varchar(10) not null,
+	pword varchar(20) not null,
 	customer_name varchar(20) not null,
-	address varchar(40) null,
-	phone char(12) null,
+	address varchar(40),
+	phone char(12),
 	PRIMARY KEY (cid));
 
 create table orders
 	(receiptId int not null,
 	odate date not null,
 	cid char(10) not null,
-	card int null,
-	expiryDate date null,
-	expectedDate date null,
-	deliveredDate date null,
+	card int,
+	expiryDate date,
+	expectedDate date,
+	deliveredDate date,
 	PRIMARY KEY (receiptId),
 	FOREIGN KEY (cid) REFERENCES customer(cid));
  

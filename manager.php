@@ -334,16 +334,16 @@ function showDailySalesReport(){
 				echo "<tr><td></td><td></td><td></td><td></td>
 						<td>----------------------------</td></tr><tr>";
 				echo "<td></td><td></td><td></td><td></td>
-						<td class=dailyreporttotal>Total : ".$total."</td>";
+						<td class=dailyreporttotal>Total : $".$total."</td>";
 				echo "</tr>";
 			}
 			// write this unit totals for this category
 			echo "<tr>";
 			echo "<td>".$upc."</td>";
 			echo "<td>".$category."</td>";
-			echo "<td>".$price."</td>";
+			echo "<td>$".$price."</td>";
 			echo "<td>".$units."</td>";
-			echo "<td>".$unit_total."</td>";
+			echo "<td>$".$unit_total."</td>";
 			echo "</tr>";
 			$previous_category = $current_category;
 		}
@@ -352,7 +352,7 @@ function showDailySalesReport(){
 		echo "<tr><td></td><td></td><td></td><td></td>
 				<td>----------------------------</td></tr><tr>";
 		echo "<td></td><td></td><td></td><td></td>
-				<td class=dailyreporttotal>Total : ".$total."</td>";
+				<td class=dailyreporttotal>Total : $".$total."</td>";
 		echo "</tr>";
 		
 	}

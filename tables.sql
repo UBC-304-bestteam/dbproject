@@ -65,7 +65,7 @@ create table returnitem
 	upc int not null,
 	quantity int not null,
 	PRIMARY KEY (retid, upc),
-	FOREIGN KEY (retid) REFERENCES returnTransaction(retid),
+	FOREIGN KEY (retid) REFERENCES returntransaction(retid),
 	FOREIGN KEY (upc) REFERENCES item(upc));
 
 insert into item 

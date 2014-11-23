@@ -66,7 +66,7 @@ a:hover { color: #bb3902; font-weight:normal; text-decoration:underline;}
 
 .errorarea {
 	font-family: verdana,helvetica;
-	font-size: 10px;
+	font-size: 12px;
 	font-weight: bold;
 	color: #ff5050;
 }
@@ -112,10 +112,14 @@ p {
 	text-align: right;
 }
 
-.dailyreporttitle{
+.reporttitle{
 	font-family: verdana,helvetica;
 	color: #000000;
 	background-color: #CE7149;
 	font-weight: plain;
 	font-size: 14pt;
+}
+
+.additionline{
+	text-align: right;
 }

@@ -113,7 +113,8 @@ function showIncompleteOrders(){
 		exit();
     }
 	// set up the table
-	echo "<table><tr>
+	echo "<table><tr><td class=reporttitle colspan=5>Incomplete Orders</td></tr>
+			<tr>
 			<td class=rowheader>#</td>
 			<td class=rowheader>Receipt ID</td>
 			<td class=rowheader>Order Date</td>
@@ -160,7 +161,8 @@ function showInventory(){
 		exit();
     }
 	// set up the table
-	echo "<table><tr>
+	echo "<table><tr><td class=reporttitle colspan=9>Inventory List</td></tr>
+			<tr>
 			<td class=rowheader>#</td>
 			<td class=rowheader>UPC</td>
 			<td class=rowheader>Title</td>
@@ -200,7 +202,6 @@ function showInventory(){
    }
 
 function updateIncompleteOrder(){
-	// receiptid, new_expecteddate, new deliverdate
 	// need to get data, so get a connection to the DB
     $connection = getConnection();
 
@@ -209,8 +210,8 @@ function updateIncompleteOrder(){
         exit();
     }
 
-	// must at least enter a receiptid so check that value was entered
-	checkRequiredFields('receiptid','new_expecteddate'); // value of the name field from the form
+	// must at least enter a receiptid and expected delivery date so check that values were entered
+	checkRequiredFields('receiptid','new_expecteddate'); // these are values of the name field from the form
 	
 	// get the values user entered in the form
 	$receiptid = $_POST['receiptid'];
@@ -254,6 +255,8 @@ function updateIncompleteOrder(){
 	
 	// Close the connection to the database once we're done with it.
     mysqli_close($connection);
+	
+	showIncompleteOrders();
 }
 
 function showDailySalesReport(){
@@ -310,7 +313,7 @@ function showDailySalesReport(){
 
 	// set up the table
 	echo "<table>
-			<tr><td class=dailyreporttitle colspan=5>Daily Sales Report for: ".$reportdate.
+			<tr><td class=reporttitle colspan=5>Daily Sales Report for: ".$reportdate.
 			"</td><tr>
 			<td class=rowheader>UPC</td>
 			<td class=rowheader>Category</td>
@@ -320,6 +323,8 @@ function showDailySalesReport(){
 			</tr>";
 	// now write each row from result as a row in the html table
 	$len_unit_totals = $unit_totals->num_rows;
+	$grandtotal = 0;
+	$totalunits = 0;
 	if ($len_unit_totals == 0 || $category_totals->num_rows == 0){
 		writeMessage("No sales on ".$reportdate);
 		exit();
@@ -331,13 +336,13 @@ function showDailySalesReport(){
 			// write the previous category's total if we just switched to a new category
 			if ($current_category != $previous_category && $previous_category != NULL) {
 				$category_totals->fetch();
-				echo "<tr><td></td><td></td><td></td><td></td>
-						<td>----------------------------</td></tr><tr>";
-				echo "<td></td><td></td><td></td><td></td>
-						<td class=dailyreporttotal>Total : $".$total."</td>";
+				$grandtotal += $total;
+				echo "<tr><td class=additionline colspan=5>----------------------------</td></tr><tr>";
+				echo "<td class=dailyreporttotal colspan=5>Total : $".$total."</td>";
 				echo "</tr>";
 			}
 			// write this unit totals for this category
+			$totalunits += $units;
 			echo "<tr>";
 			echo "<td>".$upc."</td>";
 			echo "<td>".$category."</td>";
@@ -349,12 +354,14 @@ function showDailySalesReport(){
 		}
 		// write the last category total
 		$category_totals->fetch();
-		echo "<tr><td></td><td></td><td></td><td></td>
-				<td>----------------------------</td></tr><tr>";
-		echo "<td></td><td></td><td></td><td></td>
-				<td class=dailyreporttotal>Total : $".$total."</td>";
-		echo "</tr>";
-		
+		$grandtotal += $total;
+		echo "<tr><td class=additionline colspan=5>----------------------------</td></tr>";
+		echo "<tr><td class=dailyreporttotal colspan=5>Total : $".$total."</td></tr>";
+		// write the total sales for the day
+		echo "<tr><td class=additionline colspan=5>----------------------------</td></tr>";
+		echo "<tr><td class=dailyreporttotal colspan=3>Total Daily Sales :</td>";
+		echo "<td class=dailyreporttotal>".$totalunits."</td>";
+		echo "<td class=dailyreporttotal> $".$grandtotal."</td></tr>";
 	}
 	echo "</table>";
 

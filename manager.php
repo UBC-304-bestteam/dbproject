@@ -92,6 +92,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 		//call function that gets and writes the results.
 	   showDailySalesReport();
 	  }
+	  
+//	User clicked "Get Top Sellers" button
+	if (isset($_POST["submit_topsellers"]) && $_POST["submit_topsellers"] == "Get Top Sellers") {
+		//call function that gets and writes the results.
+	   showTopSellers();
+	  }
 
 	  
 }
@@ -369,6 +375,83 @@ function showDailySalesReport(){
     mysqli_close($connection);
    }
 
+function showTopSellers(){
+	// need to get data, so get a connection to the DB
+    $connection = getConnection();
+
+    if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+    }
+	
+	// user must enter a date
+	checkRequiredFields('date');
+	$reportdate = $_POST['date'];
+	$numToGet = $_POST['topnum'];
+	
+	// check if user forgot to enter number of top sellers to retrieve
+	if (empty($numToGet)){
+		$numToGet = 1; // show top 1 by default
+		writeMessage("You forgot to enter how many, showing you the top seller.");
+	}
+	
+	// get unit totals in 1st query
+	$topsellers = $connection->prepare('SELECT title, company, stock, units_sold
+										 FROM    (SELECT P.upc, I.title, I.company, I.stock, sum(P.quantity) as units_sold
+													FROM orders O, purchaseitem P, item I
+													WHERE O.receiptId = P.receiptId and P.upc = I.upc and O.odate = ?
+													GROUP BY P.upc
+													ORDER BY category) as grouped
+										 GROUP BY units_sold
+										 ORDER BY units_sold desc
+										 LIMIT ?;');
+	$topsellers->bind_param('si',$reportdate,$numToGet);
+    $topsellers->execute();
+    $topsellers->store_result();
+    $topsellers->bind_result($title, $company, $stock, $units_sold);
+	
+	if($topsellers->error) {       
+		writeMessage("Error getting the report:".$topsellers->error);
+		exit();
+	}
+
+	// set up the table
+	echo "<table>
+			<tr><td class=reporttitle colspan=5>Top Sellers for ".$reportdate.
+			"</td><tr>
+			<td class=rowheader>#</td>
+			<td class=rowheader>Title</td>
+			<td class=rowheader>Company</td>
+			<td class=rowheader>Stock</td>
+			<td class=rowheader>Units Sold</td>
+			</tr>";
+	// now write each row from result as a row in the html table
+	$len_topsellers = $topsellers->num_rows;
+	$i = 1;
+	
+	if ($len_topsellers == 0){
+		writeMessage("No items were sold on this day!");
+		exit();
+	}
+	if ($len_topsellers < $numToGet) {
+		writeMessage("You asked for ".$numToGet." but only ".$len_topsellers." top sellers available.");
+	}
+	while($topsellers->fetch()){
+		echo "<tr>";
+		echo "<td>".$i."</td>";
+		echo "<td>".$title."</td>";
+		echo "<td>".$company."</td>";
+		echo "<td>$".$stock."</td>";
+		echo "<td>".$units_sold."</td>";
+		echo "</tr>";
+		$i += 1;
+	}
+	echo "</table>";
+
+    // Close the connection to the database once we're done with it.
+    mysqli_close($connection);
+   }
+
 ?>
 
 
@@ -400,7 +483,7 @@ function showDailySalesReport(){
 <h2>See Top Sellers:</h2>
 <form id="top" name="top" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
     <table border=0 cellpadding=0 cellspacing=0>
-        <tr><td>Date:</td><td><input type="text" size=30 name="date" value="YYYY-MM-DD"></td></tr>
+        <tr><td>Date:</td><td><input type="text" size=30 name="date" value="2014-11-02"></td></tr>
         <tr><td>How many?:</td><td><input type="text" size=30 name="topnum"></td></tr>
         <tr><td></td><td><input type="submit" name="submit_topsellers" border=0 value="Get Top Sellers"></td></tr>
     </table>

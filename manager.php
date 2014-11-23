@@ -217,14 +217,21 @@ function updateIncompleteOrder(){
 	$expecteddate = $_POST['new_expecteddate'];
 	$delivereddate = $_POST['new_deliverdate'];
 	
-	// these values might be strings, then the date is updated to empty string equivalent 0000-00-00
-	// so make them NULL instead.
-	if(empty($expecteddate)){
-		$expecteddate = NULL;
+	// if it's not empty then make sure the string is only digits in YYYY-MM-DD format
+	preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $expecteddate);
+	preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $delivereddate);
+	if (!preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $expecteddate) 
+			|| (!preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $delivereddate) && !empty($delivereddate))){
+		writeMessage("Date fields must have only #'s in YYYY-MM-DD or be left blank");
+		exit();
 	}
+	/* these values might not be dates in YYYY-MM-DD format, in which case 
+	the date is updated to empty string equivalent 0000-00-00
+	so make them NULL instead. */
 	if(empty($delivereddate)){
 		$delivereddate = NULL;
 	}
+	
 	
 	// make the query needed, it gives an array of rows from resulting query table
 	$stmt = $connection->prepare('UPDATE orders

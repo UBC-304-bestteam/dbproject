@@ -441,7 +441,7 @@ function showTopSellers(){
 		echo "<td>".$i."</td>";
 		echo "<td>".$title."</td>";
 		echo "<td>".$company."</td>";
-		echo "<td>$".$stock."</td>";
+		echo "<td>".$stock."</td>";
 		echo "<td>".$units_sold."</td>";
 		echo "</tr>";
 		$i += 1;

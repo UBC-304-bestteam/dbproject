@@ -83,9 +83,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
    
 //	User clicked "Get Inventory" button
 	if (isset($_POST["submit_viewinventory"]) && $_POST["submit_viewinventory"] == "Get Inventory") {
-		// 2. call function that gets and writes the results.
+		// call function that gets and writes the results.
        showInventory();
       }
+	  
+//	User clicked "Get Sales Report" button
+	if (isset($_POST["submit_dailysales"]) && $_POST["submit_dailysales"] == "Get Sales Report") {
+		//call function that gets and writes the results.
+	   showDailySalesReport();
+	  }
+
+	  
 }
    
 // FUNCTIONS THAT DEAL WITH DB REQUESTS
@@ -236,7 +244,117 @@ function updateIncompleteOrder(){
 	} else {
          writeMessage("Successfully updated the order");
 	}
+	
+	// Close the connection to the database once we're done with it.
+    mysqli_close($connection);
 }
+
+function showDailySalesReport(){
+	// need to get data, so get a connection to the DB
+    $connection = getConnection();
+
+    if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+    }
+	
+	// user must enter a date
+	checkRequiredFields('date');
+	$reportdate = $_POST['date'];
+	
+	// get unit totals in 1st query
+	$unit_totals = $connection->prepare('SELECT upc, category, truncate(price,2), units, truncate((price * units),2) as unit_total
+											  FROM     (SELECT P.upc, I.category, I.price, sum(P.quantity) as units
+														FROM orders O, purchaseitem P, item I
+														WHERE O.receiptId = P.receiptId and P.upc = I.upc and O.odate = ?
+														GROUP BY P.upc) as grouped
+											  GROUP BY upc
+											  ORDER BY category');
+	$unit_totals->bind_param('s',$reportdate);
+    $unit_totals->execute();
+    $unit_totals->store_result();
+    $unit_totals->bind_result($upc, $category, $price, $units, $unit_total);
+	
+	if($unit_totals->error) {       
+		writeMessage("Error getting the report:".$unit_totals->error);
+		exit();
+	}
+	
+	// get category totals in 2nd query
+	$category_totals = $connection->prepare('SELECT category, sum(unit_total)
+										     FROM 
+												(SELECT upc, category, price, units, truncate((price * units),2) as unit_total
+												 FROM  (SELECT P.upc, I.category, I.price, sum(P.quantity) as units
+														FROM orders O, purchaseitem P, item I
+														WHERE O.receiptId = P.receiptId and P.upc = I.upc and O.odate = ?
+														GROUP BY P.upc) as grouped1
+												 GROUP BY upc) as grouped2
+											GROUP BY category
+											ORDER BY category');
+	$category_totals->bind_param('s',$reportdate);
+    $category_totals->execute();
+	$category_totals->store_result();
+	$category_totals->bind_result($unused, $total);
+	
+	if($category_totals->error) {       
+		writeMessage("Error getting the report:".$category_totals->error);
+		exit();
+	}
+
+	// set up the table
+	echo "<table>
+			<tr><td class=dailyreporttitle colspan=5>Daily Sales Report for: ".$reportdate.
+			"</td><tr>
+			<td class=rowheader>UPC</td>
+			<td class=rowheader>Category</td>
+			<td class=rowheader>Unit Price</td>
+			<td class=rowheader>Units</td>
+			<td class=rowheader>Total Value</td>
+			</tr>";
+	// now write each row from result as a row in the html table
+	$len_unit_totals = $unit_totals->num_rows;
+	if ($len_unit_totals == 0 || $category_totals->num_rows == 0){
+		writeMessage("No sales on ".$reportdate);
+		exit();
+	} else {
+		$previous_category = NULL;
+		$current_category = NULL;
+		while($unit_totals->fetch()){
+			$current_category = $category;
+			// write the previous category's total if we just switched to a new category
+			if ($current_category != $previous_category && $previous_category != NULL) {
+				$category_totals->fetch();
+				echo "<tr><td></td><td></td><td></td><td></td>
+						<td>----------------------------</td></tr><tr>";
+				echo "<td></td><td></td><td></td><td></td>
+						<td class=dailyreporttotal>Total : ".$total."</td>";
+				echo "</tr>";
+			}
+			// write this unit totals for this category
+			echo "<tr>";
+			echo "<td>".$upc."</td>";
+			echo "<td>".$category."</td>";
+			echo "<td>".$price."</td>";
+			echo "<td>".$units."</td>";
+			echo "<td>".$unit_total."</td>";
+			echo "</tr>";
+			$previous_category = $current_category;
+		}
+		// write the last category total
+		$category_totals->fetch();
+		echo "<tr><td></td><td></td><td></td><td></td>
+				<td>----------------------------</td></tr><tr>";
+		echo "<td></td><td></td><td></td><td></td>
+				<td class=dailyreporttotal>Total : ".$total."</td>";
+		echo "</tr>";
+		
+	}
+	echo "</table>";
+
+    // Close the connection to the database once we're done with it.
+    mysqli_close($connection);
+   }
+
 ?>
 
 
@@ -280,7 +398,7 @@ function updateIncompleteOrder(){
 <h2>See Daily Sales Report:</h2>
 <form id="daily" name="daily" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
     <table border=0 cellpadding=0 cellspacing=0>
-        <tr><td>Date:</td><td><input type="text" size=30 name="date" value="YYYY-MM-DD"></td></tr>
+        <tr><td>Date:</td><td><input type="text" size=30 name="date" value="2014-11-02"></td></tr>
         <tr><td></td><td><input type="submit" name="submit_dailysales" border=0 value="Get Sales Report"></td></tr>
     </table>
 </form>
@@ -288,7 +406,7 @@ function updateIncompleteOrder(){
 
 <!-- view inventory -->
 <td>
-<h2>View Inventory:</h2>
+<h2>View Inventory:&nbsp;&nbsp;</h2>
 <form id="view" name="view" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
     <table border=0 cellpadding=0 cellspacing=0>
         <tr><td></td><td><input type="submit" name="submit_viewinventory" border=0 value="Get Inventory"></td></tr>

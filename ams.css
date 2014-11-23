@@ -106,3 +106,16 @@ p {
 	width:100%;
 
 }
+
+.dailyreporttotal {
+	font-weight: bold;
+	text-align: right;
+}
+
+.dailyreporttitle{
+	font-family: verdana,helvetica;
+	color: #000000;
+	background-color: #CE7149;
+	font-weight: plain;
+	font-size: 14pt;
+}

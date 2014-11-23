@@ -9,11 +9,9 @@ create table item
 	category varchar(40) not null,
 	company varchar(40),
 	release_year int,
-	price float not null,
+	price decimal(8,2) not null,
 	stock int not null,
 	PRIMARY KEY (upc));
-	CONSTRAINT chk_type CHECK (item_type IN ('CD', 'DVD'));
-	CONSTRAINT chk_category CHECK (category IN ('Rock', 'Country', 'Pop', 'Rap', 'Classical', 'Instrumental', 'New Age'));
 
 create table leadsinger
 	(upc int not null,
@@ -79,6 +77,33 @@ insert into item
 insert into item 
 	values(6790,'Country Times','CD','Country','Company 1',2010,14.99,50);
 
+insert into item 
+	values(0001,'Who\'s Next','CD','Rock','Polydor',1971,100.00,1000);
+    
+insert into item 
+	values(0002,'Quadrophenia','CD','Rock','Polydor',1973,50.99,1000);
+    
+insert into item 
+	values(0003,'My Generation','CD','Rock','Polydor',1965,25.00,1000);
+    
+insert into leadsinger
+	values(0001, "Roger Daltry");
+
+insert into leadsinger
+	values(0001, "Pete Townshend");
+    
+insert into leadsinger
+	values(0002, "Roger Daltry");
+
+insert into leadsinger
+	values(0002, "Pete Townshend");
+    
+insert into leadsinger
+	values(0003, "Roger Daltry");
+
+insert into leadsinger
+	values(0003, "Pete Townshend");
+
 insert into leadsinger
 	values(6790, "Rusty Butters");
 
@@ -117,9 +142,21 @@ insert into customer
 
 insert into orders
 	values(12345,'2014-11-01','customer01',897281,'2016-09-01','2014-12-01',null);
+    
+insert into orders
+	values(12312,'2014-11-02','customer01',897281,'2016-09-01','2014-12-01',null);
 
 insert into orders
 	values(01010,'2014-11-02','customer02',723848,'2015-01-12','2014-11-10','2014-11-10');
+    
+insert into orders
+	values(01011,'2014-11-02','customer02',723848,'2015-01-12',null,null);
+
+insert into orders
+	values(01012,'2014-11-02','customer02',723848,'2015-01-12',null,null);
+    
+insert into orders
+	values(01013,'2014-11-02','customer02',723848,'2015-01-12','2014-11-10',null);
 
 insert into purchaseitem
 	values(01010,6790,1);
@@ -132,6 +169,21 @@ insert into purchaseitem
 
 insert into purchaseitem
 	values(12345,1001,4);
+    
+insert into purchaseitem
+	values(01011,6790,4);
+    
+insert into purchaseitem
+	values(12312,0001,5);
+    
+insert into purchaseitem
+	values(01012,0001,5);
+
+insert into purchaseitem
+	values(01013,0002,2);
+    
+insert into purchaseitem
+	values(01013,0003,4);
 
 insert into returntransaction
 	values(6767,'2014-11-11',01010);

@@ -5,8 +5,8 @@ SET foreign_key_checks = 1;
 create table item
 	(upc int not null,
 	title varchar(40) not null,
-	item_type varchar(20) not null,
-	category varchar(40) not null,
+	item_type enum('CD', 'DVD') not null,
+	category enum('Rock', 'Country', 'Pop', 'Rap', 'Classical', 'Instrumental', 'New Age') not null,
 	company varchar(40),
 	release_year int,
 	price decimal(8,2) not null,

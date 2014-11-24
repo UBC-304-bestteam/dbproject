@@ -18,7 +18,7 @@ function deleteACustomer($cid){
     }
    
    // Select all of the book rows columns title_id, title and pub_id
-    if (!$result = $connection->query('DELETE FROM customer WHERE cid ="$cid"')) {
+    if (!$result = $connection->query("DELETE FROM customer WHERE cid =\"$cid\"")) {
         writeMessage("There was an error running the query. Error Message: $connection->error");
     }
 
@@ -50,7 +50,7 @@ function deleteAHassong($upc, $title){
     }
    
    // Select all of the book rows columns title_id, title and pub_id
-    if (!$result = $connection->query('DELETE FROM hassong WHERE upc="$upc" AND title="$title"')) {
+    if (!$result = $connection->query("DELETE FROM hassong WHERE upc=\"$upc\" AND title=\"$title\"")) {
         writeMessage("There was an error running the query. Error Message: $connection->error");
     }
 
@@ -82,7 +82,7 @@ function deleteAHassong($upc, $title){
     }
    
    // Select all of the book rows columns title_id, title and pub_id
-    if (!$result = $connection->query('DELETE FROM item WHERE upc="$upc"')) {
+    if (!$result = $connection->query("DELETE FROM item WHERE upc=\"$upc\"")) {
         writeMessage("There was an error running the query. Error Message: $connection->error");
     }
 
@@ -114,7 +114,7 @@ function deleteAHassong($upc, $title){
     }
    
    // Select all of the book rows columns title_id, title and pub_id
-    if (!$result = $connection->query('DELETE FROM leadsinger WHERE upc="$upc" AND singer_name="$singername"')) {
+    if (!$result = $connection->query("DELETE FROM leadsinger WHERE upc=\"$upc\" AND singer_name=\"$singername\"")) {
         writeMessage("There was an error running the query. Error Message: $connection->error");
     }
 
@@ -146,7 +146,7 @@ function deleteAHassong($upc, $title){
     }
    
    // Select all of the book rows columns title_id, title and pub_id
-    if (!$result = $connection->query('DELETE FROM orders WHERE receiptId="$receiptId"')) {
+    if (!$result = $connection->query("DELETE FROM orders WHERE receiptId=\"$receiptId\"")) {
         writeMessage("There was an error running the query. Error Message: $connection->error");
     }
 
@@ -178,7 +178,7 @@ function deleteAHassong($upc, $title){
     }
    
    // Select all of the book rows columns title_id, title and pub_id
-    if (!$result = $connection->query('DELETE FROM purchaseitem WHERE upc="$upc" AND receiptId="$receiptId"')) {
+    if (!$result = $connection->query("DELETE FROM purchaseitem WHERE upc=\"$upc\" AND receiptId=\"$receiptId\"")) {
         writeMessage("There was an error running the query. Error Message: $connection->error");
     }
 
@@ -210,7 +210,7 @@ function deleteAHassong($upc, $title){
     }
    
    // Select all of the book rows columns title_id, title and pub_id
-    if (!$result = $connection->query('DELETE FROM hassong WHERE upc="$upc" AND retid="$retid"')) {
+    if (!$result = $connection->query("DELETE FROM hassong WHERE upc=\"$upc\" AND retid=\"$retid\"")) {
         writeMessage("There was an error running the query. Error Message: $connection->error");
     }
 
@@ -242,7 +242,7 @@ function deleteAHassong($upc, $title){
     }
    
    // Select all of the book rows columns title_id, title and pub_id
-    if (!$result = $connection->query('DELETE FROM returntransaction WHERE retid="$retid"')) {
+    if (!$result = $connection->query("DELETE FROM returntransaction WHERE retid=\"$retid\"")) {
         writeMessage("There was an error running the query. Error Message: $connection->error");
     }
 

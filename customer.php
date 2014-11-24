@@ -40,8 +40,47 @@ $currentName = "";
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
-	return @new mysqli("localhost:3306", "root", "Frellingfahrbot!", "practice");
+	return @new mysqli("localhost:3306", "root", "", "practice");
 
+}
+
+// Uses the today's date and the number of unfilled orders to estimate when a package, ordered today, will be delivered.
+function estimateDeliveryDate(){
+
+	// open a connection
+	$connection = getConnection();
+	
+	// Check if connection failed
+	if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+    }
+	
+	if (!$result = $connection->query("SELECT receiptId FROM orders WHERE deliveredDate IS NULL;")) {
+        writeMessage("The Query Has Failed.");
+		return;
+	}
+	
+	// Assumes that we can deliver 5 packages every day
+	// Rounds up to nearest int
+	$numDaysTillDelivery = ($result->num_rows);
+	$numDaysTillDelivery = ceil($numDaysTillDelivery);
+	$numDaysTillDelivery = intval($numDaysTillDelivery, 10);
+	
+	$numDaysTillDelivery = (string)$numDaysTillDelivery;
+	$dateInterval = date_interval_create_from_date_string($numDaysTillDelivery . " days");
+	
+	date_default_timezone_set("America/Vancouver");
+	$deliveryDate = date_create(date("Y-m-d"));
+	$date = date_add($deliveryDate,$dateInterval);
+	$deliveryDate = date_format($date,"Y-m-d");
+	
+	// Close the connection to the database once we're done with it.
+    mysqli_close($connection);
+	
+	return $deliveryDate; // returns the estimated delivery date in YYYY-MM-DD format
+
+	
 }
 
 // write a message to the designated message area
@@ -79,7 +118,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 //	User clicked the "Login" button
 	if (isset($_POST["submit_login"]) && $_POST["submit_login"] == "Login") {
 		// call function that gets and writes the results.
-       customerLogin();
+       //customerLogin();
+	   estimateDeliveryDate();
       }
 
 
@@ -119,6 +159,9 @@ function customerLogin(){
 	}
 	$GLOBALS['currentCid'] = $cid; // Sets a global variable currentCid to the cid of the current customer
 	writeMessage("Welcome $currentName");
+	
+	// Close the connection to the database once we're done with it.
+    mysqli_close($connection);
 
 }
 

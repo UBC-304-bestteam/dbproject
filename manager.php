@@ -133,8 +133,8 @@ function showIncompleteOrders(){
 		writeMessage("No incomplete orders");
 		exit();
 	} else {
+		$i = 1;
 		while($row = $result->fetch_assoc()){
-			$i = 1;
 			echo "<tr>";
 			echo "<td>".$i."</td>";
 			echo "<td>".$row['receiptId']."</td>";
@@ -185,8 +185,8 @@ function showInventory(){
 		writeMessage("No inventory!");
 		exit();
 	} else {
+		$i = 1;
 		while($row = $result->fetch_assoc()){
-			$i = 1;
 			echo "<tr>";
 			echo "<td>".$i."</td>";
 			echo "<td>".$row['upc']."</td>";

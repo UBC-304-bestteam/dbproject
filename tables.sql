@@ -34,7 +34,7 @@ create table customer
 	PRIMARY KEY (cid));
 
 create table orders
-	(receiptId int not null,
+	(receiptId int not null AUTO_INCREMENT,
 	odate date not null,
 	cid char(10) not null,
 	card int,
@@ -54,7 +54,7 @@ create table purchaseitem
 
 
 create table returntransaction
-	(retid int not null,
+	(retid int not null AUTO_INCREMENT,
 	rdate date not null,
 	receiptId int not null,
 	PRIMARY KEY (retid),
@@ -65,7 +65,7 @@ create table returnitem
 	upc int not null,
 	quantity int not null,
 	PRIMARY KEY (retid, upc),
-	FOREIGN KEY (retid) REFERENCES returnTransaction(retid),
+	FOREIGN KEY (retid) REFERENCES returntransaction(retid),
 	FOREIGN KEY (upc) REFERENCES item(upc));
 
 insert into item 
@@ -158,6 +158,9 @@ insert into orders
 insert into orders
 	values(01013,'2014-11-02','customer02',723848,'2015-01-12','2014-11-10',null);
 
+insert into orders
+	values(01000,'2014-11-20','customer02',723848,'2015-01-12','2014-11-10','2014-11-15');
+
 insert into purchaseitem
 	values(01010,6790,1);
 
@@ -184,11 +187,26 @@ insert into purchaseitem
     
 insert into purchaseitem
 	values(01013,0003,4);
+    
+insert into purchaseitem
+	values(01000,0003,3);
 
 insert into returntransaction
 	values(6767,'2014-11-11',01010);
 
 insert into returnitem
 	values(6767,6790,1);
+
+insert into returntransaction
+	values(6000,'2014-11-18',01000);
+    
+insert into returntransaction
+	values(6001,'2014-11-19',01000);
+
+insert into returnitem
+	values(6000,0003,1);
+    
+insert into returnitem
+	values(6001,0003,1);
 
 commit;

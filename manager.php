@@ -225,8 +225,6 @@ function updateIncompleteOrder(){
 	$delivereddate = $_POST['new_deliverdate'];
 	
 	// if it's not empty then make sure the string is only digits in YYYY-MM-DD format
-	preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $expecteddate);
-	preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $delivereddate);
 	if (!preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $expecteddate) 
 			|| (!preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $delivereddate) && !empty($delivereddate))){
 		writeMessage("Date fields must have only #'s in YYYY-MM-DD or be left blank");
@@ -277,6 +275,12 @@ function showDailySalesReport(){
 	// user must enter a date
 	checkRequiredFields('date');
 	$reportdate = $_POST['date'];
+	
+	// check the date format
+	if (!preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $reportdate)){
+		writeMessage("Date field must have only #'s in YYYY-MM-DD format");
+		exit();
+	}
 	
 	// get unit totals in 1st query
 	$unit_totals = $connection->prepare('SELECT upc, category, truncate(price,2), units, truncate((price * units),2) as unit_total
@@ -393,6 +397,11 @@ function showTopSellers(){
 	if (empty($numToGet)){
 		$numToGet = 1; // show top 1 by default
 		writeMessage("You forgot to enter how many, showing you the top seller.");
+	}
+	// check the date format
+	if (!preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $reportdate)){
+		writeMessage("Date field must have only #'s in YYYY-MM-DD format");
+		exit();
 	}
 	
 	// get unit totals in 1st query

@@ -29,7 +29,7 @@
 	<a href="manager.php">Manager</a>
 <table class="headertable">
 <tr><td><h1>Welcome Customer!</h1></td></tr>
-<tr><td><div class="errorarea"> </div></td></tr>
+<tr><td><div id='errorarea' class="errorarea"> </div></td></tr>
 </table>
 </div>
 

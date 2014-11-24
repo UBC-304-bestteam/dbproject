@@ -32,7 +32,15 @@
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
-	return @new mysqli("localhost:3307", "root", "", "ams");
+	
+	 define('sqlUsername', "");
+     define('sqlPassword', "");
+     define('sqlServerName', "");
+     define('DB_HOST', '127.0.0.1'); 
+
+    return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
+
+	// return @new mysqli("localhost:3307", "root", "", "ams");
 
 }
 
@@ -97,6 +105,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	if (isset($_POST["submit_topsellers"]) && $_POST["submit_topsellers"] == "Get Top Sellers") {
 		//call function that gets and writes the results.
 	   showTopSellers();
+	  }
+
+//	User clicked "Add Item" button
+	if (isset($_POST["submit_additem"]) && $_POST["submit_additem"] == "Add Item") {
+		//call function that gets and writes the results.
+	   addNewItem();
 	  }
 
 	  
@@ -461,6 +475,65 @@ function showTopSellers(){
     mysqli_close($connection);
    }
 
+   function addNewItem(){
+	// need to get data, so get a connection to the DB
+    $connection = getConnection();
+
+    if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+    }
+
+	// must at least enter a upc, title, type, category, price and stock so check that values were entered
+	checkRequiredFields('new_upc','new_title', 'new_item_type', 'new_category', 'new_price', 'new_stock'); 
+	
+	// get the values user entered in the form
+	$upc = $_POST['new_upc'];
+	$title = $_POST['new_title'];
+	$item_type = $_POST['new_item_type'];
+	$category = $_POST['new_category'];
+	$company = $_POST['new_company'];
+	$release_year = $_POST['new_release_year'];
+	$price = $_POST['new_price'];
+	$stock = $_POST['new_stock'];
+	
+
+	// check the date format
+	if (!preg_match("(^\d{4}$)", $release_year) && !empty($release_year)){
+		writeMessage("Year field must be a valid year");
+		exit();
+	}
+	if (!preg_match("(^\d{0,8}\.\d{2}$)", $price)){
+		writeMessage("Price field must have only #'s and 2 numbers after a decimal");
+		exit();
+	}
+	// make the query needed, it gives an array of rows from resulting query table
+	$stmt = $connection->prepare('INSERT INTO item 
+		(upc, title, item_type, category, company, release_year, price, stock) 
+		VALUES (?,?,?,?,?,?,?,?)');
+
+	$stmt->bind_param("issssidi", $upc, $title, $item_type, $category, $company, $release_year, $price, $stock);
+        
+    $stmt->execute();
+	
+	// make sure a row was actually changed, e.g. 0 rows are changed if receiptId entered does not exist!
+	if ($stmt->affected_rows == 0){
+		writeMessage("UPC does not exist.");
+		exit();
+	}
+	// tell user what happened
+	if($stmt->error) {       
+		writeMessage("Error when adding the item:".$stmt->error);
+	} else {
+         writeMessage("Successfully added the item");
+	}
+	
+	// Close the connection to the database once we're done with it.
+    mysqli_close($connection);
+	
+	showInventory();
+}
+
 ?>
 
 
@@ -476,10 +549,19 @@ function showTopSellers(){
     <table border=0 cellpadding=0 cellspacing=0>
         <tr><td>UPC:</td><td><input type="text" size=30 name="new_upc"></td></tr>
         <tr><td>Title:</td><td><input type="text" size=30 name="new_title"></td></tr>
-        <tr><td>Type:</td><td> <input type="text" size=30 name="new_type"></td></tr>
-        <tr><td>Category:</td><td> <input type="text" size=30 name="new_category"></td></tr>
+        <tr><td>Type:</td><td><select name="new_item_type"> 
+        	<option value="DVD">DVD</option>
+        	<option value="CD">CD</option></select></td></tr>
+        <tr><td>Category:</td><td> <select name="new_category">
+        	<option value="Rock">Rock</option>
+        	<option value="Country">Country</option>
+        	<option value="Pop">Pop</option>
+        	<option value="Rap">Rap</option>
+        	<option value="Classical">Classical</option>
+        	<option value="Instrumental">Instrumental</option>
+        	<option value="New Age">New Age</option></select></td></tr>
         <tr><td>Company:</td><td> <input type="text" size=30 name="new_company"></td></tr>
-        <tr><td>Year:</td><td> <input type="text" size=30 name="new_year"></td></tr>
+        <tr><td>Year:</td><td> <input type="text" size=30 name="new_release_year"></td></tr>
         <tr><td>Price:</td><td> <input type="text" size=30 name="new_price"></td></tr>
         <tr><td>Stock:</td><td> <input type="text" size=30 name="new_stock"></td></tr>
         <tr><td></td><td><input type="submit" name="submit_additem" border=0 value="Add Item"></td></tr>

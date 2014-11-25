@@ -3,6 +3,9 @@
 	registration form (if it is the first time accessing the system)
 	purchase of  items online: item search table, add to cart, checkout
 -->
+<?php
+session_start(); // Used for keeping the current customer id and name after the page refreshes
+?>
 <html>
 <head>
 <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
@@ -118,8 +121,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 //	User clicked the "Login" button
 	if (isset($_POST["submit_login"]) && $_POST["submit_login"] == "Login") {
 		// call function that gets and writes the results.
-       //customerLogin();
-	   estimateDeliveryDate();
+       customerLogin();
+	   //estimateDeliveryDate();
       }
 
 
@@ -154,10 +157,10 @@ function customerLogin(){
 
 	
 	while($currentCustomer = $result->fetch_assoc()){
-	$GLOBALS['currentName'] = $currentCustomer['customer_name']; // Sets a global variable currentName to the name of the customer
+	$_SESSION['currentName'] = $currentCustomer['customer_name']; // Sets a global variable currentName to the name of the customer
 	$currentName = $currentCustomer['customer_name'];
 	}
-	$GLOBALS['currentCid'] = $cid; // Sets a global variable currentCid to the cid of the current customer
+	$_SESSION['currentCid'] = $cid; // Sets a global variable currentCid to the cid of the current customer
 	writeMessage("Welcome $currentName");
 	
 	// Close the connection to the database once we're done with it.
@@ -194,7 +197,7 @@ function customerLogin(){
 <form id="login" name="login" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
     <table border=0 cellpadding=0 cellspacing=0>
         <tr><td>Login ID:</td><td><input type="text" size=30 name="cid"></td></tr>
-        <tr><td>Password:</td><td><input type="text" size=30 name="password"></td></tr>
+        <tr><td>Password:</td><td><input type="password" size=30 name="password"></td></tr>
         <tr><td></td><td><input type="submit" name="submit_login" border=0 value="Login"></td></tr>
     </table>
 </form>

@@ -43,9 +43,9 @@ $currentName = "";
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
-	define('sqlUsername', "");
-     define('sqlPassword', "");
-     define('sqlServerName', "");
+	define('sqlUsername', "root");
+     define('sqlPassword', "root");
+     define('sqlServerName', "project1");
      define('DB_HOST', '127.0.0.1'); 
 	return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
 
@@ -259,20 +259,29 @@ function findItems(){
 	$s_quantity = $_POST['search_quantity'];
 
 
-	$sqlQuery = "SELECT * FROM item ";
+	$sqlQuery = "SELECT * FROM item";
+	
+	if ($s_leadsinger != NULL){
+		$sqlQuery =$sqlQuery." NATURAL JOIN leadsinger WHERE leadsinger.singer_name =\"$s_leadsinger\" AND";
+		writeMessage("Showing results for artist: ".$s_leadsinger.". ");
+	}else {
+		$sqlQuery = $sqlQuery." WHERE";
+	}
 
 	if ($s_category == "Search All"){
-		$sqlQuery =$sqlQuery."WHERE category is NOT NULL";
+		$sqlQuery =$sqlQuery." category is NOT NULL";
+	} else {
+		$sqlQuery = $sqlQuery." category = \"$s_category\"";
+		writeMessage($sqlQuery);
 	}
-	else {
-		$sqlQuery = $sqlQuery."WHERE category = \"$s_category\"";
-	}
+	
 	if ($s_title != NULL){
-		$sqlQuery = $sqlQuery."AND title = \"$s_title\"";
+		$sqlQuery = $sqlQuery." AND title = \"$s_title\"";
 	} 
 	if ($s_quantity != NULL){
-		$sqlQuery = $sqlQuery."AND stock = \"$s_quantity\"";
+		$sqlQuery = $sqlQuery." AND stock = \"$s_quantity\"";
 	} 
+	//writeMessage("SQLQUERY: ".$sqlQuery);
 
 	//$stmt = $connection->query("SELECT * FROM item WHERE category = \"$s_category\""); 
 	
@@ -280,10 +289,8 @@ function findItems(){
 
 	// tell user what happened
 	if($stmt->error) {       
-		writeMessage("Error when search for items:".$stmt->error);
-	} else {
-         writeMessage("Search success. ");
-	}
+		writeMessage("Error when searching for items:".$stmt->error);
+	} 
 	// set up the table
 	echo "<table><tr><td class=reporttitle colspan=9>Search Results</td></tr>
 			<tr>

@@ -43,7 +43,11 @@ $currentName = "";
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
-	return @new mysqli("localhost:3306", "root", "", "practice");
+	define('sqlUsername', "");
+     define('sqlPassword', "");
+     define('sqlServerName', "");
+     define('DB_HOST', '127.0.0.1'); 
+	return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
 
 }
 
@@ -125,6 +129,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	   //estimateDeliveryDate();
       }
 
+      //	User clicked the "Find Items" Button
+	if (isset($_POST["submit_search"]) && $_POST["submit_search"] == "Find Items") {
+		// call function that gets and writes the results.
+       findItems();
+      }
+
 
 }
    
@@ -168,6 +178,93 @@ function customerLogin(){
 
 }
 
+// FUNCTIONS THAT DEAL WITH DB REQUESTS
+
+function findItems(){
+	// need to get data, so get a connection to the DB
+    $connection = getConnection();
+
+    if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+    }
+
+
+	// get the values user entered in the form
+	$s_category = $_POST['search_category'];
+	$s_title = $_POST['search_title'];
+	$s_leadsinger = $_POST['search_leadsinger'];
+	$s_quantity = $_POST['search_quantity'];
+
+
+	$sqlQuery = "SELECT * FROM item ";
+
+	if ($s_category == "Search All"){
+		$sqlQuery =$sqlQuery."WHERE category is NOT NULL";
+	}
+	else {
+		$sqlQuery = $sqlQuery."WHERE category = \"$s_category\"";
+	}
+	if ($s_title != NULL){
+		$sqlQuery = $sqlQuery."AND title = \"$s_title\"";
+	} 
+	if ($s_quantity != NULL){
+		$sqlQuery = $sqlQuery."AND stock = \"$s_quantity\"";
+	} 
+
+	//$stmt = $connection->query("SELECT * FROM item WHERE category = \"$s_category\""); 
+	
+	$stmt = $connection->query($sqlQuery);
+
+	// tell user what happened
+	if($stmt->error) {       
+		writeMessage("Error when search for items:".$stmt->error);
+	} else {
+         writeMessage("Search success. ");
+	}
+	// set up the table
+	echo "<table><tr><td class=reporttitle colspan=9>Search Results</td></tr>
+			<tr>
+			<td class=rowheader>#</td>
+			<td class=rowheader>UPC</td>
+			<td class=rowheader>Title</td>
+			<td class=rowheader>Item type</td>
+			<td class=rowheader>Category</td>
+			<td class=rowheader>Company</td>
+			<td class=rowheader>Release year</td>
+			<td class=rowheader>Price</td>
+			<td class=rowheader>Stock</td>
+			</tr>";
+			
+	// now write each row from result as a row in the html table
+	if ($stmt->num_rows == 0){
+		// if there's no such items just write an error
+		writeMessage("No inventory matching the search results, please try again!");
+		exit();
+	} else {
+		$i = 1;
+		while($row = $stmt->fetch_assoc()){
+			echo "<tr>";
+			echo "<td>".$i."</td>";
+			echo "<td>".$row['upc']."</td>";
+			echo "<td>".$row['title']."</td>";
+			echo "<td>".$row['item_type']."</td>";
+			echo "<td>".$row['category']."</td>";
+			echo "<td>".$row['company']."</td>";
+			echo "<td>".$row['release_year']."</td>";
+			echo "<td>".$row['price']."</td>";
+			echo "<td>".$row['stock']."</td>";
+			echo "</tr>";
+			$i += 1;
+		}
+	}
+	echo "</table>";
+    //Close the connection to the database once we're done with it.
+
+	// Close the connection to the database once we're done with it.
+    mysqli_close($connection);
+   }
+
 ?>
 
 
@@ -207,10 +304,18 @@ function customerLogin(){
 <h2>Search Items:</h2>
 <form id="search" name="search" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
     <table border=0 cellpadding=0 cellspacing=0>
-        <tr><td>Category:</td><td><input type="text" size=30 name="category"></td></tr>
-        <tr><td>Title:</td><td><input type="text" size=30 name="title"></td></tr>
-        <tr><td>Lead Singer:</td><td><input type="text" size=30 name="leadsinger"></td></tr>
-        <tr><td>Quantity:</td><td><input type="text" size=30 name="new_quantity"></td></tr>
+        <tr><td>Category:</td><td> <select name="search_category">
+        	<option value="Search All">Search All</option>
+        	<option value="Rock">Rock</option>
+        	<option value="Country">Country</option>
+        	<option value="Pop">Pop</option>
+        	<option value="Rap">Rap</option>
+        	<option value="Classical">Classical</option>
+        	<option value="Instrumental">Instrumental</option>
+        	<option value="New Age">New Age</option></select></td></tr>
+        <tr><td>Title:</td><td><input type="text" size=30 name="search_title"></td></tr>
+        <tr><td>Lead Singer:</td><td><input type="text" size=30 name="search_leadsinger"></td></tr>
+        <tr><td>Quantity:</td><td><input type="text" size=30 name="search_quantity"></td></tr>
         <tr><td></td><td><input type="submit" name="submit_search" border=0 value="Find Items"></td></tr>
     </table>
 </form>

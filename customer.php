@@ -125,6 +125,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	   //estimateDeliveryDate();
       }
 
+if (isset($_POST["submit_customer"]) && $_POST["submit_customer"] == "Register") {
+		// call function that adds a new user
+	   addUser();
+      }
+
 
 }
    
@@ -165,6 +170,61 @@ function customerLogin(){
 	
 	// Close the connection to the database once we're done with it.
     mysqli_close($connection);
+
+}
+
+function addUser(){
+
+	// get the values user entered in the form
+	$customer_name = $_POST['new_name'];
+	$address = $_POST['new_address'];
+	$phone = $_POST['new_phone'];
+	$cid = $_POST['new_cid'];
+	$pword = $_POST['new_password'];
+	
+checkRequiredFields('$customer_name','$cid','$pword');
+
+
+	// open a connection
+	$connection = getConnection();
+	
+	// Check if connection failed
+	if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+    }
+
+// Check if username is already taken
+$cid_query = $connection->prepare("SELECT cid FROM customer WHERE cid=?");
+	$cid_query->bind_param('s',$cid);
+    $cid_query->execute();
+    $cid_query->store_result();
+    $cid_query->bind_result($cid);
+
+if(!$cid_query->num_rows==0){ 
+ writeMessage("Username is already taken. Please select a different one.");
+    
+}
+
+ else {
+	$stmt = $connection->prepare('INSERT INTO customer 
+		(cid,pword,customer_name,address,phone) 
+		VALUES (?,?,?,?,?)');
+
+	$stmt->bind_param("sssss", $cid, $pword, $customer_name, $address, $phone);
+        
+    $stmt->execute();
+
+if (!$result = $connection->query("SELECT customer_name FROM customer WHERE cid=\"$cid\" AND pword=\"$pword\"")) {
+        writeMessage("Adding This Customer Has Failed.");
+		return;
+	}
+
+	writeMessage("Customer Successfully Added.");
+}
+	// Close the connection to the database once we're done with it.
+    mysqli_close($connection);
+
 
 }
 

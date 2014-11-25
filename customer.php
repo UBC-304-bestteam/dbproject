@@ -10,7 +10,7 @@
 
 <title>Allegro Music Store</title>
 <link href="ams.css" rel="stylesheet" type="text/css">
-
+ 
 <!-- Javascript to write errors to a designated area -->
 <script>
 	function writeMessage(errorString){
@@ -28,17 +28,59 @@
 	<a href="clerk.php">Clerk</a>
 	<a href="manager.php">Manager</a>
 <table class="headertable">
-<tr><td><h1>Welcome Customer!</h1></td></tr>
+<tr><td><h1>Welcome Customer</h1></td></tr>
 <tr><td><div id='errorarea' class="errorarea"> </div></td></tr>
 </table>
 </div>
 
 <?php
 
+$currentCid = "";
+$currentName = "";
+
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
-	return @new mysqli("localhost:3307", "root", "", "ams");
+	return @new mysqli("localhost:3306", "root", "", "practice");
 
+}
+
+// Uses the today's date and the number of unfilled orders to estimate when a package, ordered today, will be delivered.
+function estimateDeliveryDate(){
+
+	// open a connection
+	$connection = getConnection();
+	
+	// Check if connection failed
+	if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+    }
+	
+	if (!$result = $connection->query("SELECT receiptId FROM orders WHERE deliveredDate IS NULL;")) {
+        writeMessage("The Query Has Failed.");
+		return;
+	}
+	
+	// Assumes that we can deliver 5 packages every day
+	// Rounds up to nearest int
+	$numDaysTillDelivery = ($result->num_rows);
+	$numDaysTillDelivery = ceil($numDaysTillDelivery);
+	$numDaysTillDelivery = intval($numDaysTillDelivery, 10);
+	
+	$numDaysTillDelivery = (string)$numDaysTillDelivery;
+	$dateInterval = date_interval_create_from_date_string($numDaysTillDelivery . " days");
+	
+	date_default_timezone_set("America/Vancouver");
+	$deliveryDate = date_create(date("Y-m-d"));
+	$date = date_add($deliveryDate,$dateInterval);
+	$deliveryDate = date_format($date,"Y-m-d");
+	
+	// Close the connection to the database once we're done with it.
+    mysqli_close($connection);
+	
+	return $deliveryDate; // returns the estimated delivery date in YYYY-MM-DD format
+
+	
 }
 
 // write a message to the designated message area
@@ -73,11 +115,55 @@ function checkRequiredFields() {
 // DEAL WITH UI REQUESTS HERE (like what do when user clicks a button to submit info)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
+//	User clicked the "Login" button
+	if (isset($_POST["submit_login"]) && $_POST["submit_login"] == "Login") {
+		// call function that gets and writes the results.
+       //customerLogin();
+	   estimateDeliveryDate();
+      }
+
 
 }
    
 // FUNCTIONS THAT DEAL WITH DB REQUESTS
+function customerLogin(){
+		
+	// get the values user entered in the form
+	$currentName = "";
+	$cid = $_POST['cid'];
+	$password = $_POST['password'];
+	
+	// open a connection
+	$connection = getConnection();
+	
+	// Check if connection failed
+	if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+    }
+	
+	if (!$result = $connection->query("SELECT customer_name FROM customer WHERE cid=\"$cid\" AND pword=\"$password\"")) {
+        writeMessage("The Query to Find This Customer Has Failed.");
+		return;
+	}
+	
+	if ($result->num_rows == 0){
+		writeMessage("You Have Not Registered With Us Before. Please Register First And Then Trying Logging In.");
+		return;
+	}
 
+	
+	while($currentCustomer = $result->fetch_assoc()){
+	$GLOBALS['currentName'] = $currentCustomer['customer_name']; // Sets a global variable currentName to the name of the customer
+	$currentName = $currentCustomer['customer_name'];
+	}
+	$GLOBALS['currentCid'] = $cid; // Sets a global variable currentCid to the cid of the current customer
+	writeMessage("Welcome $currentName");
+	
+	// Close the connection to the database once we're done with it.
+    mysqli_close($connection);
+
+}
 
 ?>
 
@@ -97,7 +183,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <tr><td>Phone #:</td><td> <input type="text" size=30 name="new_phone"></td></tr>
         <tr><td>Login ID:</td><td> <input type="text" size=30 name="new_cid"></td></tr>
         <tr><td>Password:</td><td> <input type="text" size=30 name="new_password"></td></tr>
-        <tr><td></td><td><input type="register" name="submit_customer" border=0 value="Register"></td></tr>
+        <tr><td></td><td><input type="submit" name="submit_customer" border=0 value="Register"></td></tr>
     </table>
 </form>
 </td>

@@ -212,7 +212,7 @@ function addUser(){
 	$cid = $_POST['new_cid'];
 	$pword = $_POST['new_password'];
 	
-	checkRequiredFields('$customer_name','$cid','$pword');
+	checkRequiredFields('new_name','new_cid','new_password');
 
 
 	// open a connection
@@ -362,6 +362,16 @@ function addToBasket($input){
 	
 	// get the values user entered in the form
 	$quantity_wanted = $_POST['quantity_wanted'];
+	
+	if(empty($_POST['quantity_wanted'])){
+		writeMessage("You must specify a quantity for this item.");
+		return;
+	}
+	
+	if($quantity_wanted = 0){
+		writeMessage("You must specify a quantity for this item.");
+		return;
+	}
 
 	// find empty space in array
 	while(!empty($_SESSION['basket'][$i])){

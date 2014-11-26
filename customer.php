@@ -607,7 +607,7 @@ function completePurchase(){
 			writeMessage("There was an error while completing purchase: ".$order->error.$purchaseitem->error.$updatestock->error);
 			$connection->rollback();
 			mysqli_close($connection);
-			exit();
+			return;
 			
 		} else {
 			$connection->commit();
@@ -616,7 +616,8 @@ function completePurchase(){
 	// Close the connection to the database once we're done with it.
     mysqli_close($connection);
 	// tell the user it was successful if we reach here
-	 writeMessage("Successfully purchased, your expected delivery date is ".$expecteddate);
+	 writeMessage("Successfully purchased. Your expected delivery date is $expecteddate and your ReceiptID is: $new_receiptId. ");
+	 emptybasket();
 	
 }
 

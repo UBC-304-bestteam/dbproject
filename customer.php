@@ -41,14 +41,16 @@ session_start(); // Used for keeping the current customer id and name after the 
 $currentCid = "";
 $currentName = "";
 
+	 define('sqlUsername', "root");
+     define('sqlPassword', "");
+     define('sqlServerName', "practice");
+     define('DB_HOST', '127.0.0.1:3306'); 
+
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
-	define('sqlUsername', "root");
-     define('sqlPassword', "root");
-     define('sqlServerName', "project1");
-     define('DB_HOST', '127.0.0.1'); 
-//	return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
-	return @new mysqli("localhost:3306", "root", "", "project");
+
+	return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
+	//return @new mysqli("localhost:3306", "root", "", "project");
 
 }
 
@@ -303,11 +305,11 @@ function findItems(){
 	$stmt = $connection->query($sqlQuery);
 
 	// tell user what happened
-	if($stmt->error) {       
-		writeMessage("Error when searching for items:".$stmt->error);
+	if($connection->error) {       
+		writeMessage("Error when searching for items: $connection->error");
 	} 
 	// set up the table
-	echo "<table><tr><td class=reporttitle colspan=9>Search Results</td></tr>
+	echo "<table><tr><td class=reporttitle colspan=10>Search Results</td></tr>
 			<tr >
 			<td class=rowheader>#</td>
 			<td class=rowheader>UPC</td>
@@ -325,7 +327,7 @@ function findItems(){
 	if ($stmt->num_rows == 0){
 		// if there's no such items just write an error
 		writeMessage("No inventory matching the search results, please try again!");
-		exit();
+		return;
 	} else {
 		$i = 1;
 		while($row = $stmt->fetch_assoc()){
@@ -394,7 +396,12 @@ function viewBasket(){
 			<td class=rowheader>Quantity</td>
 			<td class=rowheader>Total Cost</td>
 			</tr>";
-
+	
+	if($_SESSION['basket'] == NULL){
+	writeMessage("Your Basket is Currently Empty.");
+	return;
+	}
+	
 	// gets missing info for items in basket, adds them to table
 	foreach($_SESSION['basket'] as $item){
 	$quantity_want = $item['quantity'];

@@ -35,7 +35,7 @@
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
-	return @new mysqli("localhost:3307", "root", "", "ams");
+	return @new mysqli("127.0.0.1:3306", "root", "", "practice");
 
 }
 

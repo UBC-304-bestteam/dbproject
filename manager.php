@@ -29,14 +29,13 @@
 </div>
 
 <?php
+	 define('sqlUsername', "root");
+     define('sqlPassword', "");
+     define('sqlServerName', "practice");
+     define('DB_HOST', '127.0.0.1:3306'); 
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
-	
-	 define('sqlUsername', "");
-     define('sqlPassword', "");
-     define('sqlServerName', "");
-     define('DB_HOST', '127.0.0.1'); 
 
     return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
 

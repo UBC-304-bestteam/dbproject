@@ -134,7 +134,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	if (isset($_POST["submit_customer"]) && $_POST["submit_customer"] == "Register") {
 		// call function that adds a new user
 	   addUser();
-}
+	}
 
       //	User clicked the "Find Items" Button
 	if (isset($_POST["submit_search"]) && $_POST["submit_search"] == "Find Items") {
@@ -150,12 +150,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	if (isset($_POST["view_basket"]) && $_POST["view_basket"] == "View Basket") {
 		// call function that shows items in basket
 	   viewBasket();
-}
+	}
 
 	if (isset($_POST["empty_basket"]) && $_POST["empty_basket"] == "Empty Basket") {
 		// call function that shows items in basket
 	   emptyBasket();
-}
+	}
 
 
 }
@@ -303,10 +303,10 @@ function findItems(){
 	$stmt = $connection->query($sqlQuery);
 
 	// tell user what happened
-/*	if($stmt->error) {       
+	if($stmt->error) {       
 		writeMessage("Error when searching for items:".$stmt->error);
 	} 
-*/	// set up the table
+	// set up the table
 	echo "<table><tr><td class=reporttitle colspan=9>Search Results</td></tr>
 			<tr >
 			<td class=rowheader>#</td>
@@ -375,32 +375,55 @@ function addToBasket($input){
 }
 
 function viewBasket(){
+
+	// need to get data, so get a connection to the DB
+    $connection = getConnection();
+
+    if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+}
 	$i = 1;
+	// create table to display basket contents
 	echo "<table><tr><td class=reporttitle colspan=9>Basket Contents</td></tr>
 			<tr >
 			<td class=rowheader>#</td>
 			<td class=rowheader>UPC</td>
+			<td class=rowheader>Title</td>
+			<td class=rowheader>Price</td>
 			<td class=rowheader>Quantity</td>
+			<td class=rowheader>Total Cost</td>
 			</tr>";
 
+	// gets missing info for items in basket, adds them to table
 	foreach($_SESSION['basket'] as $item){
 	$quantity_want = $item['quantity'];
 	$item_upc = $item['upc'];
 
-//	writeMessage("Item in basket: " . $item_upc . ", quantity: " . $quantity_want . ".<br>");
+	$upc_query = $connection->prepare("SELECT title,price FROM item WHERE upc=?");
+	$upc_query->bind_param('s',$item_upc);
+   	 $upc_query->execute();
+   	 $upc_query->store_result();
+   	 $upc_query->bind_result($item_title,$item_price);
 
+	while($row = $upc_query->fetch()){
 			echo "<tr>";
 			echo "<td>".$i."</td>";
 			echo "<td>".$item_upc."</td>";
+			echo "<td>".$item_title."</td>";
+			echo "<td>".$item_price."</td>";
 			echo "<td>".$quantity_want."</td>";
+			echo "<td>".$quantity_want * $item_price."</td>";
 			echo "</tr>";
 
 			$i += 1;
 	}
+}
 	echo "</table>";
 
 }
 
+// emptys the basket
 function emptyBasket(){
 	$_SESSION['basket'] = null;
 }

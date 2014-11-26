@@ -50,15 +50,17 @@ $currentCid = "";
 $currentName = "";
 
 	 define('sqlUsername', "root");
-     define('sqlPassword', "");
-     define('sqlServerName', "practice");
-     define('DB_HOST', '127.0.0.1:3306'); 
+     define('sqlPassword', "root");
+     define('sqlServerName', "project1");
+     define('DB_HOST', '127.0.0.1'); 
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
 
 	// return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
-	return @new mysqli("localhost:3307", "root", "", "ams");
+	//return @new mysqli("localhost:3307", "root", "", "ams");
+	 return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
+
 
 }
 
@@ -279,7 +281,7 @@ function findItems(){
     if (mysqli_connect_errno()) {
         writeMessage("Could not connect to database");
         exit();
-}
+	}
 
 	// get the values user entered in the form
 	$s_category = $_POST['search_category'];
@@ -307,21 +309,30 @@ function findItems(){
 	if ($s_title != NULL){
 		$sqlQuery = $sqlQuery." AND title = \"$s_title\"";
 	} 
-	if ($s_quantity != NULL){
-		$sqlQuery = $sqlQuery." AND stock = \"$s_quantity\"";
-	} 
-	//writeMessage("SQLQUERY: ".$sqlQuery);
 
-	//$stmt = $connection->query("SELECT * FROM item WHERE category = \"$s_category\""); 
-	
 	$stmt = $connection->query($sqlQuery);
 
 	// tell user what happened
 	if($connection->error) {       
 		writeMessage("Error when searching for items: $connection->error");
 	} 
-	// set up the table
-	echo "<table><tr><td class=reporttitle colspan=10>Search Results</td></tr>
+
+			
+	// now write each row from result as a row in the html table
+	if ($stmt->num_rows == 0){
+		// if there's no such items just write an error
+		writeMessage("No inventory matching the search results, please try again!");
+		return;
+	}
+	if ($stmt->num_rows == 1){
+		writeMessage("Only one item matching. ");
+
+		$row = $stmt->fetch_assoc();
+
+		if ( (empty($_POST['search_quantity'])) || ($row['stock'] < $s_quantity)){
+		
+		// set up the table
+		echo "<table><tr><td class=reporttitle colspan=10>Search Results</td></tr>
 			<tr >
 			<td class=rowheader>#</td>
 			<td class=rowheader>UPC</td>
@@ -334,13 +345,62 @@ function findItems(){
 			<td class=rowheader>Stock</td>
 			<td class=rowheader>Add to Cart</td>
 			</tr>";
-			
-	// now write each row from result as a row in the html table
-	if ($stmt->num_rows == 0){
-		// if there's no such items just write an error
-		writeMessage("No inventory matching the search results, please try again!");
-		return;
-	} else {
+
+
+		writeMessage("Invalid quantity. Input a new quantity and click add. ");
+		$i = 1;
+		echo "<tr>";
+		echo "<td>".$i."</td>";
+		echo "<td>".$row['upc']."</td>";
+		echo "<td>".$row['title']."</td>";
+		echo "<td>".$row['item_type']."</td>";
+		echo "<td>".$row['category']."</td>";
+		echo "<td>".$row['company']."</td>";
+		echo "<td>".$row['release_year']."</td>";
+		echo "<td>".$row['price']."</td>";
+		echo "<td>".$row['stock']."</td>";	
+		echo "<form id='".$row['upc']."' name='add' method='post' action='".$_SERVER['PHP_SELF'] ."'>
+			<td><input type='text' size=5 name='quantity_wanted'></td>
+			<td><input type='submit' name='submit_add' border=0 value='Add'></td>
+			<td><input type='hidden' form='".$row['upc']."' name='formname' value='".$row['upc']."'></td>
+			</form>";
+		echo "</tr>";
+		echo "</table>";
+		}
+		else{
+			$i = 0;
+
+			// find empty space in array
+			while(!empty($_SESSION['basket'][$i])){
+				$i += 1;
+			}
+
+			$_SESSION['basket'][$i] = array('upc' => $row['upc'], 'quantity' => $s_quantity); 
+
+			// check if item was added to basket
+			if($_SESSION['basket'][$i] == array('upc' => $row['upc'], 'quantity' => $s_quantity)){
+			writeMessage("Item Successfully Added to basket. ");
+			}
+
+			viewBasket();
+		}
+	} 
+	else {
+		// More than one search result print the table
+		echo "<table><tr><td class=reporttitle colspan=10>Search Results</td></tr>
+			<tr >
+			<td class=rowheader>#</td>
+			<td class=rowheader>UPC</td>
+			<td class=rowheader>Title</td>
+			<td class=rowheader>Item type</td>
+			<td class=rowheader>Category</td>
+			<td class=rowheader>Company</td>
+			<td class=rowheader>Release year</td>
+			<td class=rowheader>Price</td>
+			<td class=rowheader>Stock</td>
+			<td class=rowheader>Add to Cart</td>
+			</tr>";
+
 		$i = 1;
 		while($row = $stmt->fetch_assoc()){
 			echo "<tr>";
@@ -353,16 +413,16 @@ function findItems(){
 			echo "<td>".$row['release_year']."</td>";
 			echo "<td>".$row['price']."</td>";
 			echo "<td>".$row['stock']."</td>";	
-	echo "<form id='".$row['upc']."' name='add' method='post' action='".$_SERVER['PHP_SELF'] ."'>
-	 <td><input type='text' size=5 name='quantity_wanted'></td>
-	<td><input type='submit' name='submit_add' border=0 value='Add'></td>
-	<td><input type='hidden' form='".$row['upc']."' name='formname' value='".$row['upc']."'></td>
-	</form>";
-		echo "</tr>";
+			echo "<form id='".$row['upc']."' name='add' method='post' action='".$_SERVER['PHP_SELF'] ."'>
+				<td><input type='text' size=5 name='quantity_wanted'></td>
+				<td><input type='submit' name='submit_add' border=0 value='Add'></td>
+				<td><input type='hidden' form='".$row['upc']."' name='formname' value='".$row['upc']."'></td>
+				</form>";
+			echo "</tr>";
 			$i += 1;
 		}
+		echo "</table>";
 	}
-	echo "</table>";
 
 	// Close the connection to the database once we're done with it.
     mysqli_close($connection);
@@ -407,6 +467,13 @@ function viewBasket(){
         writeMessage("Could not connect to database");
         exit();
 }
+	
+	
+	if($_SESSION['basket']==NULL){
+	writeMessage("Your Basket is Currently Empty.");
+	return;
+	}
+
 	$i = 1;
 	// create table to display basket contents
 	echo "<table><tr><td class=reporttitle colspan=9>Basket Contents</td></tr>
@@ -423,7 +490,7 @@ function viewBasket(){
 	writeMessage("Your Basket is Currently Empty.");
 	return;
 	}
-	
+
 	// gets missing info for items in basket, adds them to table
 	foreach($_SESSION['basket'] as $item){
 	$quantity_want = $item['quantity'];

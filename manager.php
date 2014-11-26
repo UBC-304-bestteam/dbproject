@@ -30,9 +30,9 @@
 
 <?php
 	 define('sqlUsername', "root");
-     define('sqlPassword', "");
-     define('sqlServerName', "practice");
-     define('DB_HOST', '127.0.0.1:3306'); 
+     define('sqlPassword', "root");
+     define('sqlServerName', "project1");
+     define('DB_HOST', '127.0.0.1'); 
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
@@ -107,7 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	  }
 
 //	User clicked "Add Item" button
-	if (isset($_POST["submit_additem"]) && $_POST["submit_additem"] == "Add Item") {
+	if (isset($_POST["submit_additem"]) && $_POST["submit_additem"] == "Add/Edit Item") {
 		//call function that gets and writes the results.
 	   addNewItem();
 	  }
@@ -483,11 +483,56 @@ function showTopSellers(){
         exit();
     }
 
+    checkRequiredFields('new_upc');
+    $upc = $_POST['new_upc'];
+
+    // make the query needed, it gives an array of rows from resulting query table
+	$checkstmt = $connection->query("SELECT * from item WHERE upc = \"$upc\"");
+
+	    // tell user what happened
+	if($connection->error) {       
+		writeMessage("Error when adding items: $connection->error");
+	} 
+
+	if ($checkstmt->num_rows > 0){
+		// if there's an existing item update it
+
+		checkRequiredFields('new_stock');
+		$price = $_POST['new_price'];
+		$stock = $_POST['new_stock'];
+
+
+	if (!preg_match("(^\d{0,8}\.\d{2}$)", $price) && !empty($price)){
+		writeMessage("Price field must have only #'s and 2 numbers after a decimal");
+		exit();
+	}
+
+	$sqlQuery = "UPDATE item SET stock = \"$stock\"";
+	
+	if ($price != NULL){
+		$sqlQuery = $sqlQuery.", price = \"$price\"";
+	} 
+
+	$sqlQuery = $sqlQuery." WHERE upc = \"$upc\"";
+
+	$stmt = $connection->query($sqlQuery);
+
+	// tell user what happened
+	if($stmt->error) {     
+		writeMessage("Error when editing the item:".$stmt->error);
+	} else {
+         writeMessage("Successfully updated item :".$upc." ");
+	}
+
+	} 
+	else {
+		// No existing item add a new one
+	
 	// must at least enter a upc, title, type, category, price and stock so check that values were entered
 	checkRequiredFields('new_upc','new_title', 'new_item_type', 'new_category', 'new_price', 'new_stock'); 
 	
 	// get the values user entered in the form
-	$upc = $_POST['new_upc'];
+	//$upc = $_POST['new_upc'];
 	$title = $_POST['new_title'];
 	$item_type = $_POST['new_item_type'];
 	$category = $_POST['new_category'];
@@ -526,6 +571,7 @@ function showTopSellers(){
 	} else {
          writeMessage("Successfully added the item");
 	}
+}
 	
 	// Close the connection to the database once we're done with it.
     mysqli_close($connection);
@@ -543,7 +589,7 @@ function showTopSellers(){
 <tr>
 <!-- add item form -->
 <td>
-<h2>Add a New Item:</h2>
+<h2>Add a New Item/Edit an Existing Item:</h2>
 <form id="add" name="add" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
     <table border=0 cellpadding=0 cellspacing=0>
         <tr><td>UPC:</td><td><input type="text" size=30 name="new_upc"></td></tr>
@@ -563,7 +609,7 @@ function showTopSellers(){
         <tr><td>Year:</td><td> <input type="text" size=30 name="new_release_year"></td></tr>
         <tr><td>Price:</td><td> <input type="text" size=30 name="new_price"></td></tr>
         <tr><td>Stock:</td><td> <input type="text" size=30 name="new_stock"></td></tr>
-        <tr><td></td><td><input type="submit" name="submit_additem" border=0 value="Add Item"></td></tr>
+        <tr><td></td><td><input type="submit" name="submit_additem" border=0 value="Add/Edit Item"></td></tr>
     </table>
 </form>
 </td>

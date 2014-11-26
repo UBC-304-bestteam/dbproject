@@ -50,15 +50,17 @@ $currentCid = "";
 $currentName = "";
 
 	 define('sqlUsername', "root");
-     define('sqlPassword', "");
-     define('sqlServerName', "practice");
-     define('DB_HOST', '127.0.0.1:3306'); 
+     define('sqlPassword', "root");
+     define('sqlServerName', "project1");
+     define('DB_HOST', '127.0.0.1'); 
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
 
 	// return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
-	return @new mysqli("localhost:3307", "root", "", "ams");
+	//return @new mysqli("localhost:3307", "root", "", "ams");
+	 return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
+
 
 }
 
@@ -303,13 +305,7 @@ function findItems(){
 	if ($s_title != NULL){
 		$sqlQuery = $sqlQuery." AND title = \"$s_title\"";
 	} 
-	if ($s_quantity != NULL){
-		$sqlQuery = $sqlQuery." AND stock = \"$s_quantity\"";
-	} 
-	//writeMessage("SQLQUERY: ".$sqlQuery);
 
-	//$stmt = $connection->query("SELECT * FROM item WHERE category = \"$s_category\""); 
-	
 	$stmt = $connection->query($sqlQuery);
 
 	// tell user what happened
@@ -317,6 +313,7 @@ function findItems(){
 		writeMessage("Error when searching for items: $connection->error");
 	} 
 	// set up the table
+	if ($stmt->num_rows > 1){
 	echo "<table><tr><td class=reporttitle colspan=10>Search Results</td></tr>
 			<tr >
 			<td class=rowheader>#</td>
@@ -330,13 +327,47 @@ function findItems(){
 			<td class=rowheader>Stock</td>
 			<td class=rowheader>Add to Cart</td>
 			</tr>";
+		}
 			
 	// now write each row from result as a row in the html table
 	if ($stmt->num_rows == 0){
 		// if there's no such items just write an error
 		writeMessage("No inventory matching the search results, please try again!");
 		return;
-	} else {
+	}
+	if ($stmt->num_rows == 1){
+		$i = 0;
+		writeMessage("Only one item matching add it to shopping basket. ");
+
+
+		if(empty($_POST['search_quantity'])){
+			writeMessage("You must specify a quantity for this item.");
+			return;
+		}
+		if($s_quantity == 0){
+			writeMessage("You must specify a quantity for this item.");
+			return;
+		}
+		// find empty space in array
+		while(!empty($_SESSION['basket'][$i])){
+			$i += 1;
+		}
+		$row = $stmt->fetch_assoc();
+
+		if ( $row['stock'] < $s_quantity){
+			writeMessage("Not enough stock. Will add ".$row['stock']." to cart. ");
+			$s_quantity = $row['stock']; 
+		}
+
+		$_SESSION['basket'][$i] = array('upc' => $row['upc'], 'quantity' => $s_quantity); 
+
+		// check if item was added to basket
+		if($_SESSION['basket'][$i] == array('upc' => $row['upc'], 'quantity' => $s_quantity)){
+			writeMessage("Item Successfully Added. ");
+		}
+		viewBasket();
+	} 
+	else {
 		$i = 1;
 		while($row = $stmt->fetch_assoc()){
 			echo "<tr>";
@@ -376,7 +407,7 @@ function addToBasket($input){
 		return;
 	}
 	
-	if($quantity_wanted = 0){
+	if($quantity_wanted == 0){
 		writeMessage("You must specify a quantity for this item.");
 		return;
 	}
@@ -415,7 +446,7 @@ function viewBasket(){
 			<td class=rowheader>Total Cost</td>
 			</tr>";
 	
-	if($_SESSION['basket']){
+	if($_SESSION['basket']==NULL){
 	writeMessage("Your Basket is Currently Empty.");
 	return;
 	}

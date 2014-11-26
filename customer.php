@@ -47,7 +47,8 @@ function getConnection() {
      define('sqlPassword', "root");
      define('sqlServerName', "project1");
      define('DB_HOST', '127.0.0.1'); 
-	return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
+//	return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
+	return @new mysqli("localhost:3306", "root", "", "project");
 
 }
 
@@ -130,7 +131,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       }
 
 
-if (isset($_POST["submit_customer"]) && $_POST["submit_customer"] == "Register") {
+	if (isset($_POST["submit_customer"]) && $_POST["submit_customer"] == "Register") {
 		// call function that adds a new user
 	   addUser();
 }
@@ -141,6 +142,20 @@ if (isset($_POST["submit_customer"]) && $_POST["submit_customer"] == "Register")
        findItems();
 
       }
+	if (isset($_POST["submit_add"]) && $_POST["submit_add"] == "Add") {
+		// call function that adds items to basket
+	   addToBasket($_POST["formname"]);
+	}
+
+	if (isset($_POST["view_basket"]) && $_POST["view_basket"] == "View Basket") {
+		// call function that shows items in basket
+	   viewBasket();
+}
+
+	if (isset($_POST["empty_basket"]) && $_POST["empty_basket"] == "Empty Basket") {
+		// call function that shows items in basket
+	   emptyBasket();
+}
 
 
 }
@@ -207,7 +222,7 @@ function addUser(){
         exit();
    	 }
 
-// Check if username is already taken
+	// Check if username is already taken
 	$cid_query = $connection->prepare("SELECT cid FROM customer WHERE cid=?");
 	$cid_query->bind_param('s',$cid);
    	 $cid_query->execute();
@@ -288,12 +303,12 @@ function findItems(){
 	$stmt = $connection->query($sqlQuery);
 
 	// tell user what happened
-	if($stmt->error) {       
+/*	if($stmt->error) {       
 		writeMessage("Error when searching for items:".$stmt->error);
 	} 
-	// set up the table
+*/	// set up the table
 	echo "<table><tr><td class=reporttitle colspan=9>Search Results</td></tr>
-			<tr>
+			<tr >
 			<td class=rowheader>#</td>
 			<td class=rowheader>UPC</td>
 			<td class=rowheader>Title</td>
@@ -323,21 +338,72 @@ function findItems(){
 			echo "<td>".$row['company']."</td>";
 			echo "<td>".$row['release_year']."</td>";
 			echo "<td>".$row['price']."</td>";
-			echo "<td>".$row['stock']."</td>";
-echo "<td><input type='text' size=3 name='quantity_wanted'></td>";
-echo "<td><input type='submit' name='submit_add' border=0 value='Add'></td>";
-			echo "</tr>";
+			echo "<td>".$row['stock']."</td>";	
+	echo "<form id='".$row['upc']."' name='add' method='post' action='".$_SERVER['PHP_SELF'] ."'>
+	 <td><input type='text' size=5 name='quantity_wanted'></td>
+	<td><input type='submit' name='submit_add' border=0 value='Add'></td>
+	<td><input type='hidden' form='".$row['upc']."' name='formname' value='".$row['upc']."'></td>
+	</form>";
+		echo "</tr>";
 			$i += 1;
 		}
 	}
 	echo "</table>";
-    //Close the connection to the database once we're done with it.
 
 	// Close the connection to the database once we're done with it.
     mysqli_close($connection);
    
 }
 
+function addToBasket($input){
+	$i = 0;
+	
+	// get the values user entered in the form
+	$quantity_wanted = $_POST['quantity_wanted'];
+
+	// find empty space in array
+	while(!empty($_SESSION['basket'][$i])){
+	$i += 1;
+	}
+
+	$_SESSION['basket'][$i] = array('upc' => $input, 'quantity' => $quantity_wanted); 
+
+	// check if item was added to basket
+	if($_SESSION['basket'][$i] == array('upc' => $input, 'quantity' => $quantity_wanted)){
+	writeMessage("Item Successfully Added. ");
+	}
+}
+
+function viewBasket(){
+	$i = 1;
+	echo "<table><tr><td class=reporttitle colspan=9>Basket Contents</td></tr>
+			<tr >
+			<td class=rowheader>#</td>
+			<td class=rowheader>UPC</td>
+			<td class=rowheader>Quantity</td>
+			</tr>";
+
+	foreach($_SESSION['basket'] as $item){
+	$quantity_want = $item['quantity'];
+	$item_upc = $item['upc'];
+
+//	writeMessage("Item in basket: " . $item_upc . ", quantity: " . $quantity_want . ".<br>");
+
+			echo "<tr>";
+			echo "<td>".$i."</td>";
+			echo "<td>".$item_upc."</td>";
+			echo "<td>".$quantity_want."</td>";
+			echo "</tr>";
+
+			$i += 1;
+	}
+	echo "</table>";
+
+}
+
+function emptyBasket(){
+	$_SESSION['basket'] = null;
+}
 
 ?>
 
@@ -394,6 +460,14 @@ echo "<td><input type='submit' name='submit_add' border=0 value='Add'></td>";
     </table>
 </form>
 </td>
+
+<form id="basket" name="basket" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
+<td><input type="submit" name="view_basket" border=0 value="View Basket"></td>
+</form>
+
+<form id="empty_basket" name="empty_basket" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
+<td><input type="submit" name="empty_basket" border=0 value="Empty Basket"></td>
+</form>
 
 </tr>
 </table>

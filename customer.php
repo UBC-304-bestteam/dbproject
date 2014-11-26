@@ -31,7 +31,15 @@ session_start(); // Used for keeping the current customer id and name after the 
 	<a href="clerk.php">Clerk</a>
 	<a href="manager.php">Manager</a>
 <table class="headertable">
-<tr><td><h1>Welcome Customer</h1></td></tr>
+<tr><td>
+<?php 
+if (isset($_SESSION['currentName'])) {
+	echo '<h1>Welcome '.$_SESSION['currentName'].'</h1>';
+} else {
+	echo '<h1>Welcome Customer</h1>';
+}
+?>
+</td></tr>
 <tr><td><div id='errorarea' class="errorarea"> </div></td></tr>
 </table>
 </div>
@@ -49,8 +57,8 @@ $currentName = "";
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
 
-	return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
-	//return @new mysqli("localhost:3306", "root", "", "project");
+	// return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
+	return @new mysqli("localhost:3307", "root", "", "ams");
 
 }
 
@@ -407,7 +415,7 @@ function viewBasket(){
 			<td class=rowheader>Total Cost</td>
 			</tr>";
 	
-	if($_SESSION['basket'] == NULL){
+	if($_SESSION['basket']){
 	writeMessage("Your Basket is Currently Empty.");
 	return;
 	}

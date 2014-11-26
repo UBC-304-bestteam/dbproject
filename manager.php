@@ -496,46 +496,21 @@ function showTopSellers(){
 
 	if ($checkstmt->num_rows > 0){
 		// if there's an existing item update it
-	$title = $_POST['new_title'];
-	$item_type = $_POST['new_item_type'];
-	$category = $_POST['new_category'];
-	$company = $_POST['new_company'];
-	$release_year = $_POST['new_release_year'];
-	$price = $_POST['new_price'];
-	$stock = $_POST['new_stock'];
 
-	// check the date format
-	if (!preg_match("(^\d{4}$)", $release_year) && !empty($release_year)){
-		writeMessage("Year field must be a valid year");
-		exit();
-	}
+		checkRequiredFields('new_stock');
+		$price = $_POST['new_price'];
+		$stock = $_POST['new_stock'];
+
+
 	if (!preg_match("(^\d{0,8}\.\d{2}$)", $price) && !empty($price)){
 		writeMessage("Price field must have only #'s and 2 numbers after a decimal");
 		exit();
 	}
 
-	$sqlQuery = "UPDATE item SET ";
-
-	if ($item_type != NULL){
-		$sqlQuery =$sqlQuery." item_type =\"$item_type\"";
-	} 
-	if ($category != NULL){
-		$sqlQuery = $sqlQuery.", category = \"$category\"";
-	} 
-	if ($title != NULL){
-		$sqlQuery =$sqlQuery.", title =\"$title\"";
-	}
-	if ($company != NULL){
-		$sqlQuery = $sqlQuery.", company = \"$company\"";
-	}
-	if ($release_year != NULL){
-		$sqlQuery = $sqlQuery.", release_year = \"$release_year\"";
-	} 
+	$sqlQuery = "UPDATE item SET stock = \"$stock\"";
+	
 	if ($price != NULL){
 		$sqlQuery = $sqlQuery.", price = \"$price\"";
-	} 
-	if ($price != NULL){
-		$sqlQuery = $sqlQuery.", stock = \"$stock\"";
 	} 
 
 	$sqlQuery = $sqlQuery." WHERE upc = \"$upc\"";

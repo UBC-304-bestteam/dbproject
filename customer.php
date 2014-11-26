@@ -195,7 +195,7 @@ function addUser(){
 	$cid = $_POST['new_cid'];
 	$pword = $_POST['new_password'];
 	
-checkRequiredFields('$customer_name','$cid','$pword');
+	checkRequiredFields('$customer_name','$cid','$pword');
 
 
 	// open a connection
@@ -205,21 +205,21 @@ checkRequiredFields('$customer_name','$cid','$pword');
 	if (mysqli_connect_errno()) {
         writeMessage("Could not connect to database");
         exit();
-    }
+   	 }
 
 // Check if username is already taken
-$cid_query = $connection->prepare("SELECT cid FROM customer WHERE cid=?");
+	$cid_query = $connection->prepare("SELECT cid FROM customer WHERE cid=?");
 	$cid_query->bind_param('s',$cid);
-    $cid_query->execute();
-    $cid_query->store_result();
-    $cid_query->bind_result($cid);
+   	 $cid_query->execute();
+   	 $cid_query->store_result();
+   	 $cid_query->bind_result($cid);
 
-if(!$cid_query->num_rows==0){ 
- writeMessage("Username is already taken. Please select a different one.");
+	if(!$cid_query->num_rows==0){ 
+	 writeMessage("Username is already taken. Please select a different one.");
     
-}
+	}
 
- else {
+	 else {
 	$stmt = $connection->prepare('INSERT INTO customer 
 		(cid,pword,customer_name,address,phone) 
 		VALUES (?,?,?,?,?)');
@@ -228,7 +228,7 @@ if(!$cid_query->num_rows==0){
         
     $stmt->execute();
 
-if (!$result = $connection->query("SELECT customer_name FROM customer WHERE cid=\"$cid\" AND pword=\"$pword\"")) {
+	if (!$result = $connection->query("SELECT customer_name FROM customer WHERE cid=\"$cid\" AND pword=\"$pword\"")) {
         writeMessage("Adding This Customer Has Failed.");
 		return;
 	}
@@ -303,6 +303,7 @@ function findItems(){
 			<td class=rowheader>Release year</td>
 			<td class=rowheader>Price</td>
 			<td class=rowheader>Stock</td>
+			<td class=rowheader>Add to Cart</td>
 			</tr>";
 			
 	// now write each row from result as a row in the html table
@@ -323,6 +324,8 @@ function findItems(){
 			echo "<td>".$row['release_year']."</td>";
 			echo "<td>".$row['price']."</td>";
 			echo "<td>".$row['stock']."</td>";
+echo "<td><input type='text' size=3 name='quantity_wanted'></td>";
+echo "<td><input type='submit' name='submit_add' border=0 value='Add'></td>";
 			echo "</tr>";
 			$i += 1;
 		}

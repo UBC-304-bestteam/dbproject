@@ -50,9 +50,9 @@ $currentCid = "";
 $currentName = "";
 
 	 define('sqlUsername', "root");
-     define('sqlPassword', "root");
-     define('sqlServerName', "project1");
-     define('DB_HOST', '127.0.0.1'); 
+     define('sqlPassword', "");
+     define('sqlServerName', "practice");
+     define('DB_HOST', '127.0.0.1:3306'); 
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {
@@ -173,6 +173,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 		// call function that completes the purchase and provides delivery estimate
 	   completePurchase();
 	}
+	
+	if (isset($_POST["logout"]) && $_POST["logout"] == "Log Out") {
+		// call function that shows items in basket
+	   userLogout();
+	}
 
 }
    
@@ -214,6 +219,12 @@ function customerLogin(){
 	// Close the connection to the database once we're done with it.
     mysqli_close($connection);
 
+}
+
+function userLogout(){
+	unset($_SESSION['currentName']);
+	unset($_SESSION['currentCid']);
+	writeMessage("You've Been Logged Off");
 }
 
 
@@ -357,7 +368,7 @@ function findItems(){
 		echo "<td>".$row['category']."</td>";
 		echo "<td>".$row['company']."</td>";
 		echo "<td>".$row['release_year']."</td>";
-		echo "<td>".$row['price']."</td>";
+		echo "<td>$".$row['price']."</td>";
 		echo "<td>".$row['stock']."</td>";	
 		echo "<form id='".$row['upc']."' name='add' method='post' action='".$_SERVER['PHP_SELF'] ."'>
 			<td><input type='text' size=5 name='quantity_wanted'></td>
@@ -411,7 +422,7 @@ function findItems(){
 			echo "<td>".$row['category']."</td>";
 			echo "<td>".$row['company']."</td>";
 			echo "<td>".$row['release_year']."</td>";
-			echo "<td>".$row['price']."</td>";
+			echo "<td>$".$row['price']."</td>";
 			echo "<td>".$row['stock']."</td>";	
 			echo "<form id='".$row['upc']."' name='add' method='post' action='".$_SERVER['PHP_SELF'] ."'>
 				<td><input type='text' size=5 name='quantity_wanted'></td>
@@ -507,9 +518,9 @@ function viewBasket(){
 			echo "<td>".$i."</td>";
 			echo "<td>".$item_upc."</td>";
 			echo "<td>".$item_title."</td>";
-			echo "<td>".$item_price."</td>";
+			echo "<td>$".$item_price."</td>";
 			echo "<td>".$quantity_want."</td>";
-			echo "<td>".$quantity_want * $item_price."</td>";
+			echo "<td>$".$quantity_want * $item_price."</td>";
 			echo "</tr>";
 
 			$i += 1;
@@ -522,6 +533,7 @@ function viewBasket(){
 // emptys the basket
 function emptyBasket(){
 	$_SESSION['basket'] = null;
+	writeMessage("Basket has been emptied.");
 }
 
 // completes a purchase and updates the stock quantities for purchased items
@@ -537,6 +549,11 @@ function completePurchase(){
 	// if empty basket, just give a message
 	if(empty($_SESSION['basket'])){
 	writeMessage("Your Basket is Currently Empty.");
+	return;
+	}
+	
+	if(empty($_SESSION['currentCid'])){
+	writeMessage("You Must Log In Before Completing a Purchase.");
 	return;
 	}
 
@@ -633,7 +650,7 @@ function completePurchase(){
     <table border=0 cellpadding=0 cellspacing=0>
         <tr><td>Login ID:</td><td><input type="text" size=30 name="cid"></td></tr>
         <tr><td>Password:</td><td><input type="password" size=30 name="password"></td></tr>
-        <tr><td></td><td><input type="submit" name="submit_login" border=0 value="Login"></td></tr>
+        <tr><td></td><td><input type="submit" name="submit_login" border=0 value="Login"><input type="submit" onClick="window.location.href=window.location.href" name="logout" border=0 value="Log Out"></td></tr>
     </table>
 </form>
 </td>
@@ -669,7 +686,7 @@ function completePurchase(){
 </tr>
 <tr>
 <td>
-<h2>Login:</h2>
+<h2>Credit Card Info:</h2>
 <form id="pay" name="pay" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
     <table border=0 cellpadding=0 cellspacing=0>
         <tr><td>Credit Card #:</td><td><input type="text" size=30 name="cardnum"></td></tr>

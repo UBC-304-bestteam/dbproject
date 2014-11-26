@@ -30,9 +30,9 @@
 
 <?php
 	 define('sqlUsername', "root");
-     define('sqlPassword', "root");
-     define('sqlServerName', "project1");
-     define('DB_HOST', '127.0.0.1'); 
+     define('sqlPassword', "");
+     define('sqlServerName', "practice");
+     define('DB_HOST', '127.0.0.1:3306'); 
 
 // USEFUL GENERAL PROCEDURES
 function getConnection() {

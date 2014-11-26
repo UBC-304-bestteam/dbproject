@@ -166,7 +166,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 		// call function that shows items in basket
 	   emptyBasket();
 	}
-
+	
+	if (isset($_POST["submit_payment"]) && $_POST["submit_payment"] == "Complete Purchase") {
+		// call function that completes the purchase and provides delivery estimate
+	   completePurchase();
+	}
 
 }
    
@@ -376,7 +380,7 @@ function addToBasket($input){
 		return;
 	}
 	
-	if($quantity_wanted = 0){
+	if($quantity_wanted == 0){
 		writeMessage("You must specify a quantity for this item.");
 		return;
 	}
@@ -415,7 +419,7 @@ function viewBasket(){
 			<td class=rowheader>Total Cost</td>
 			</tr>";
 	
-	if($_SESSION['basket']){
+	if(empty($_SESSION['basket'])){
 	writeMessage("Your Basket is Currently Empty.");
 	return;
 	}
@@ -451,6 +455,85 @@ function viewBasket(){
 // emptys the basket
 function emptyBasket(){
 	$_SESSION['basket'] = null;
+}
+
+// completes a purchase and updates the stock quantities for purchased items
+function completePurchase(){
+	// need to get data, so get a connection to the DB
+    $connection = getConnection();
+
+    if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+    }
+	
+	// if empty basket, just give a message
+	if(empty($_SESSION['basket'])){
+	writeMessage("Your Basket is Currently Empty.");
+	return;
+	}
+
+	// must at least enter a receiptid and expected delivery date so check that values were entered
+	checkRequiredFields('cardnum','expirydate'); // these are values of the name field from the form
+	
+	// get the values user entered in the form
+	$creditcard = $_POST['cardnum'];
+	$expiry = $_POST['expirydate'];
+	
+	// check the date format
+	if (!preg_match("/\d{4}-{1}\d{2}-{1}\d{2}/", $expiry)){
+		writeMessage("Expiry date must have only #'s in YYYY-MM-DD format");
+		exit();
+	}
+	
+	// get the expected delivery date
+	$expecteddate = estimateDeliveryDate();
+	echo $expecteddate;
+	
+	// the rest will be a transaction: if one of these fails we want to rollback all the changes
+	$connection->autocommit(FALSE);
+		
+		foreach($_SESSION['basket'] as $item){
+			$purchase_quantity = $item['quantity'];
+			$purchase_upc = $item['upc'];
+			// create order
+			// recieptId is automatically generated since it's set to auto_increment in table.sql, just pass in null
+			$order = $connection->prepare( 'INSERT INTO orders
+											 VALUES (NULL, CURDATE(), ?, ?, ?, ?, NULL);');
+			$order->bind_param("siss",$_SESSION['currentCid'], $creditcard, $expiry, $expecteddate);
+			$order->execute();
+			
+			// create purchaseitem
+			$new_receiptId = $order->insert_id; // get the auto-generated receiptId from the last query
+			$purchaseitem = $connection->prepare( 'INSERT INTO purchaseitem
+												 VALUES (?, ?, ?)');
+			$purchaseitem->bind_param("iii",$new_receiptId, $purchase_upc, $purchase_quantity);
+			$purchaseitem->execute();
+			
+			// update stock for the purchased item
+			$updatestock = $connection->prepare( 'UPDATE item
+												  SET stock = (stock-?)
+												  WHERE upc=?;');
+			$updatestock->bind_param("ii",$purchase_quantity, $purchase_upc);
+			$updatestock->execute();
+		}
+		
+		// if any of the queries failed then rollback otherwise commit the changes
+		if ($order->error || $purchaseitem->error || $updatestock->error) {
+			writeMessage("There was an error while completing purchase: ".$order->error.$purchaseitem->error.$updatestock->error);
+			$connection->rollback();
+			mysqli_close($connection);
+			exit();
+			
+		} else {
+			$connection->commit();
+		}
+	
+	// Close the connection to the database once we're done with it.
+    mysqli_close($connection);
+	// tell the user it was successful if we reach here
+	 writeMessage("Successfully purchased, your expected delivery date is ".$expecteddate);
+	
 }
 
 ?>
@@ -516,7 +599,18 @@ function emptyBasket(){
 <form id="empty_basket" name="empty_basket" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
 <td><input type="submit" name="empty_basket" border=0 value="Empty Basket"></td>
 </form>
-
+</tr>
+<tr>
+<td>
+<h2>Login:</h2>
+<form id="pay" name="pay" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
+    <table border=0 cellpadding=0 cellspacing=0>
+        <tr><td>Credit Card #:</td><td><input type="text" size=30 name="cardnum"></td></tr>
+        <tr><td>Expiry Date:</td><td><input type="text" size=30 name="expirydate" value="YYYY-MM-DD"></td></tr>
+        <tr><td></td><td><input type="submit" name="submit_payment" border=0 value="Complete Purchase"></td></tr>
+    </table>
+</form>
+</td>
 </tr>
 </table>
 </body>

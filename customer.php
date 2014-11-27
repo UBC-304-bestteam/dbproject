@@ -58,8 +58,8 @@ $currentName = "";
 function getConnection() {
 
 	// return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
-	//return @new mysqli("localhost:3307", "root", "", "ams");
-	 return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
+	return @new mysqli("localhost:3306", "root", "", "project");
+//	 return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
 
 
 }
@@ -161,7 +161,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 	if (isset($_POST["view_basket"]) && $_POST["view_basket"] == "View Basket") {
 		// call function that shows items in basket
-	   viewBasket();
+	   viewBasket("Basket Contents");
 	}
 
 	if (isset($_POST["empty_basket"]) && $_POST["empty_basket"] == "Empty Basket") {
@@ -177,6 +177,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	if (isset($_POST["logout"]) && $_POST["logout"] == "Log Out") {
 		// call function that shows items in basket
 	   userLogout();
+	}
+
+	if (isset($_POST["view_bill"]) && $_POST["view_bill"] == "View Bill") {
+		// call function that shows items in basket
+	   viewBill();
 	}
 
 }
@@ -442,7 +447,13 @@ function findItems(){
 
 function addToBasket($input){
 	$i = 0;
-	
+    $connection = getConnection();
+
+    if (mysqli_connect_errno()) {
+        writeMessage("Could not connect to database");
+        exit();
+	}
+
 	// get the values user entered in the form
 	$quantity_wanted = $_POST['quantity_wanted'];
 	
@@ -453,6 +464,17 @@ function addToBasket($input){
 	
 	if($quantity_wanted == 0){
 		writeMessage("You must specify a quantity for this item.");
+		return;
+	}
+
+	$sqlQuery = "SELECT stock FROM item WHERE upc=\"$input\"";
+	$upc_query = $connection->query($sqlQuery);
+
+	$row = $upc_query->fetch_assoc();
+
+	// check if there is enough items in stock for quantity wanted
+	if (($row['stock'] < $quantity_wanted)){
+		writeMessage("Only " . $row['stock']. " in stock. Please select a different quantity.");
 		return;
 	}
 
@@ -467,10 +489,13 @@ function addToBasket($input){
 	if($_SESSION['basket'][$i] == array('upc' => $input, 'quantity' => $quantity_wanted)){
 	writeMessage("Item Successfully Added. ");
 	}
+
+	// Close the connection to the database once we're done with it.
+    mysqli_close($connection);
 }
 
-function viewBasket(){
-
+function viewBasket($input){
+	$_SESSION['total_price'] = 0;
 	// need to get data, so get a connection to the DB
     $connection = getConnection();
 
@@ -487,7 +512,7 @@ function viewBasket(){
 
 	$i = 1;
 	// create table to display basket contents
-	echo "<table><tr><td class=reporttitle colspan=9>Basket Contents</td></tr>
+	echo "<table><tr><td class=reporttitle colspan=9>". $input . "</td></tr>
 			<tr >
 			<td class=rowheader>#</td>
 			<td class=rowheader>UPC</td>
@@ -523,18 +548,34 @@ function viewBasket(){
 			echo "<td>$".$quantity_want * $item_price."</td>";
 			echo "</tr>";
 
+		$_SESSION['total_price'] += $quantity_want * $item_price;
 			$i += 1;
 	}
 }
 	echo "</table>";
+	echo "<br> <b>Total price of all items in basket before tax: </b>$" . $_SESSION['total_price'];
 
 }
 
-// emptys the basket
+// empties the basket
 function emptyBasket(){
 	$_SESSION['basket'] = null;
+	$_SESSION['total_price'] = null;
 	writeMessage("Basket has been emptied.");
 }
+
+function viewBill(){
+	viewBasket("Bill");
+	
+	$bt_price = $_SESSION['total_price'];
+	$tax = 0.12;
+	$tax_amount = round($bt_price * $tax,2,PHP_ROUND_HALF_UP);
+	echo "<br> <b>12% Tax: </b>$" . $tax_amount;
+	$final_price = round($bt_price + $tax_amount,2,PHP_ROUND_HALF_UP);
+	echo "<br> <b>Total price: </b>$" . $final_price . "<br><br>";
+
+}
+
 
 // completes a purchase and updates the stock quantities for purchased items
 function completePurchase(){
@@ -683,6 +724,9 @@ function completePurchase(){
 
 <form id="empty_basket" name="empty_basket" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
 <td><input type="submit" name="empty_basket" border=0 value="Empty Basket"></td>
+</form>
+<form id="view_bill" name="view_bill" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
+<td><input type="submit" name="view_bill" border=0 value="View Bill"></td>
 </form>
 </tr>
 <tr>

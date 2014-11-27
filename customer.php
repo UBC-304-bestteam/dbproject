@@ -58,7 +58,7 @@ $currentName = "";
 function getConnection() {
 
 	// return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
-	return @new mysqli("localhost:3306", "root", "", "project");
+	return @new mysqli("localhost:3307", "root", "", "ams");
 //	 return @new mysqli(DB_HOST, sqlUsername, sqlPassword, sqlServerName);
 
 
@@ -398,7 +398,7 @@ function findItems(){
 			writeMessage("Item Successfully Added to basket. ");
 			}
 
-			viewBasket();
+			viewBasket("Basket Contents");
 		}
 	} 
 	else {
@@ -505,7 +505,7 @@ function viewBasket($input){
 }
 	
 	
-	if($_SESSION['basket']==NULL){
+	if(empty($_SESSION['basket'])){
 	writeMessage("Your Basket is Currently Empty.");
 	return;
 	}
@@ -598,7 +598,7 @@ function completePurchase(){
 	return;
 	}
 
-	// must at least enter a receiptid and expected delivery date so check that values were entered
+	// must at least enter both card # and expiry date so check that values were entered
 	checkRequiredFields('cardnum','expirydate'); // these are values of the name field from the form
 	
 	// get the values user entered in the form
@@ -613,22 +613,22 @@ function completePurchase(){
 	
 	// get the expected delivery date
 	$expecteddate = estimateDeliveryDate();
-	echo $expecteddate;
 	
 	// the rest will be a transaction: if one of these fails we want to rollback all the changes
 	$connection->autocommit(FALSE);
 		
+		// create one new order
+		// recieptId is automatically generated since it's set to auto_increment in table.sql, just pass in null
+		$order = $connection->prepare( 'INSERT INTO orders
+										 VALUES (NULL, CURDATE(), ?, ?, ?, ?, NULL);');
+		$order->bind_param("siss",$_SESSION['currentCid'], $creditcard, $expiry, $expecteddate);
+		$order->execute();
 		foreach($_SESSION['basket'] as $item){
+		
 			$purchase_quantity = $item['quantity'];
 			$purchase_upc = $item['upc'];
-			// create order
-			// recieptId is automatically generated since it's set to auto_increment in table.sql, just pass in null
-			$order = $connection->prepare( 'INSERT INTO orders
-											 VALUES (NULL, CURDATE(), ?, ?, ?, ?, NULL);');
-			$order->bind_param("siss",$_SESSION['currentCid'], $creditcard, $expiry, $expecteddate);
-			$order->execute();
 			
-			// create purchaseitem
+			// create purchaseitem for each item in the order
 			$new_receiptId = $order->insert_id; // get the auto-generated receiptId from the last query
 			$purchaseitem = $connection->prepare( 'INSERT INTO purchaseitem
 												 VALUES (?, ?, ?)');
